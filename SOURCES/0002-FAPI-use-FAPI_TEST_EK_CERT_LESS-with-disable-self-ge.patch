@@ -1,0 +1,42 @@
+From d680ea548b3ab066f6bea625af5d4000ca32cfee Mon Sep 17 00:00:00 2001
+From: Jonas Witschel <diabonas@gmx.de>
+Date: Mon, 1 Mar 2021 20:00:17 +0100
+Subject: FAPI: use FAPI_TEST_EK_CERT_LESS with
+ --disable-self-generated-certificate
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Since commit 199b4edc265b2f4758aa22ebf4ed6472a34b9a7a ("FAPI: Fix reading of
+the root certificate for provisioning.") it is required to specify
+--enable-self-generated-certificate in order to make the FAPI integration tests
+pass. This is an option that should usually not be enabled in production builds
+for security reasons, but still some form of integration testing might be
+desirable in this case to verify whether the compiled library works as
+expected. Use FAPI_TEST_EK_CERT_LESS in this case to run the tests without EK
+certificate validation.
+
+Signed-off-by: Jonas Witschel <diabonas@gmx.de>
+---
+ configure.ac | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
+
+diff --git a/configure.ac b/configure.ac
+index d3bbb93d..d4324c9a 100755
+--- a/configure.ac
++++ b/configure.ac
+@@ -444,8 +444,9 @@ AC_ARG_ENABLE([self-generated-certificate],
+             [AS_HELP_STRING([--enable-self-generated-certificate],
+                             [Alllow usage of self generated root certifcate])],,
+             [enable_self_generated_certificate=no])
+-AS_IF([test "x$enable_self_generated_certificate" == xyes],
+-	[AC_DEFINE([SELF_GENERATED_CERTIFICATE],[1], [Allow usage of self generated root certifcate])])
++AS_IF([test "x$enable_self_generated_certificate" = xyes],
++	[AC_DEFINE([SELF_GENERATED_CERTIFICATE], [1], [Allow usage of self generated root certificate])],
++	[AS_IF([test "x$integration_tcti" != "xdevice"], [AC_DEFINE([FAPI_TEST_EK_CERT_LESS], [1], [Perform integration tests without EK certificate verification])])])
+ 
+ 
+ AC_SUBST([PATH])
+-- 
+2.26.3
+

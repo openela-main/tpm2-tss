@@ -1,0 +1,39 @@
+From 8b3891af6b8125f30c4b229ee1ba0b30a112664a Mon Sep 17 00:00:00 2001
+From: Juergen Repp <juergen.repp@sit.fraunhofer.de>
+Date: Tue, 21 Dec 2021 11:59:28 +0100
+Subject: [PATCH 11/23] esys: Return an error if ESYS_TR_NONE is passed to
+ Esys_TR_GetName.
+
+A segfault was produced in this case. Fixes #2243.
+
+Signed-off-by: Juergen Repp <juergen.repp@sit.fraunhofer.de>
+---
+ src/tss2-esys/esys_tr.c | 5 +++++
+ 1 file changed, 5 insertions(+)
+
+diff --git a/src/tss2-esys/esys_tr.c b/src/tss2-esys/esys_tr.c
+index f0127d02..cf4caa09 100644
+--- a/src/tss2-esys/esys_tr.c
++++ b/src/tss2-esys/esys_tr.c
+@@ -408,6 +408,7 @@ Esys_TR_SetAuth(ESYS_CONTEXT * esys_context, ESYS_TR esys_handle,
+  * @retval TSS2_ESYS_RC_MEMORY if needed memory can't be allocated.
+  * @retval TSS2_ESYS_RC_GENERAL_FAILURE for errors of the crypto library.
+  * @retval TSS2_ESYS_RC_BAD_REFERENCE if the esysContext is NULL.
++ * @retval TSS2_ESYS_RC_BAD_TR if the handle is invalid.
+  * @retval TSS2_SYS_RC_* for SAPI errors.
+  */
+ TSS2_RC
+@@ -418,6 +419,10 @@ Esys_TR_GetName(ESYS_CONTEXT * esys_context, ESYS_TR esys_handle,
+     TSS2_RC r;
+     _ESYS_ASSERT_NON_NULL(esys_context);
+ 
++    if (esys_handle == ESYS_TR_NONE) {
++        return_error(TSS2_ESYS_RC_BAD_TR, "Name for ESYS_TR_NONE can't be determined.");
++    }
++
+     r = esys_GetResourceObject(esys_context, esys_handle, &esys_object);
+     return_if_error(r, "Object not found");
+ 
+-- 
+2.34.3
+

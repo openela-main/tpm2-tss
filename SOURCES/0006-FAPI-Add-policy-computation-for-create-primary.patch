@@ -1,0 +1,70 @@
+From 5ecd682797d2744d4a03c82ee5907db6766bcff1 Mon Sep 17 00:00:00 2001
+From: Juergen Repp <juergen.repp@sit.fraunhofer.de>
+Date: Tue, 12 Oct 2021 11:19:41 +0200
+Subject: [PATCH 06/23] FAPI: Add policy computation for create primary.
+
+The policy digest for primary keys was only computed for keys created during provisioning.
+Now the policy digest is also computed for primary keys create with Fapi_CreateKey.
+Fixes #2175.
+
+Signed-off-by: Juergen Repp <juergen.repp@sit.fraunhofer.de>
+---
+ src/tss2-fapi/fapi_int.h  |  1 +
+ src/tss2-fapi/fapi_util.c | 29 +++++++++++++++++++++++++++++
+ 2 files changed, 30 insertions(+)
+
+diff --git a/src/tss2-fapi/fapi_int.h b/src/tss2-fapi/fapi_int.h
+index 13c0333e..d13ec413 100644
+--- a/src/tss2-fapi/fapi_int.h
++++ b/src/tss2-fapi/fapi_int.h
+@@ -341,6 +341,7 @@ enum IFAPI_KEY_CREATE_STATE {
+     KEY_CREATE_FLUSH1,
+     KEY_CREATE_FLUSH2,
+     KEY_CREATE_CALCULATE_POLICY,
++    KEY_CREATE_PRIMARY_CALCULATE_POLICY,
+     KEY_CREATE_WAIT_FOR_AUTHORIZATION,
+     KEY_CREATE_CLEANUP,
+     KEY_CREATE_WAIT_FOR_RANDOM,
+diff --git a/src/tss2-fapi/fapi_util.c b/src/tss2-fapi/fapi_util.c
+index a5fc28a3..a0fd714e 100644
+--- a/src/tss2-fapi/fapi_util.c
++++ b/src/tss2-fapi/fapi_util.c
+@@ -4539,6 +4539,35 @@ ifapi_create_primary(
+                                        "hierarchy.", error_cleanup);
+         }
+ 
++        if (context->cmd.Key_Create.policyPath
++            && strcmp(context->cmd.Key_Create.policyPath, "") != 0)
++            context->cmd.Key_Create.state = KEY_CREATE_PRIMARY_CALCULATE_POLICY;
++        /* else jump over to KEY_CREATE_PRIMARY_WAIT_FOR_SESSION below */
++    /* FALLTHRU */
++    case KEY_CREATE_PRIMARY_CALCULATE_POLICY:
++        if (context->cmd.Key_Create.state == KEY_CREATE_PRIMARY_CALCULATE_POLICY) {
++            r = ifapi_calculate_tree(context, context->cmd.Key_Create.policyPath,
++                                     &context->policy.policy,
++                                     context->cmd.Key_Create.public_templ.public.publicArea.nameAlg,
++                                     &context->policy.digest_idx,
++                                     &context->policy.hash_size);
++            return_try_again(r);
++            goto_if_error2(r, "Calculate policy tree %s", error_cleanup,
++                           context->cmd.Key_Create.policyPath);
++
++            /* Store the calculated policy in the key object */
++            object->policy = calloc(1, sizeof(TPMS_POLICY));
++            return_if_null(object->policy, "Out of memory",
++                    TSS2_FAPI_RC_MEMORY);
++            *(object->policy) = context->policy.policy;
++
++            context->cmd.Key_Create.public_templ.public.publicArea.authPolicy.size =
++                context->policy.hash_size;
++            memcpy(&context->cmd.Key_Create.public_templ.public.publicArea.authPolicy.buffer[0],
++                   &context->policy.policy.policyDigests.digests[context->policy.digest_idx].digest,
++                   context->policy.hash_size);
++        }
++
+         r = ifapi_get_sessions_async(context,
+                                      IFAPI_SESSION_GENEK | IFAPI_SESSION1,
+                                      TPMA_SESSION_ENCRYPT | TPMA_SESSION_DECRYPT, 0);
+-- 
+2.34.3
+

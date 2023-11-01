@@ -1,0 +1,47 @@
+From 6e9c46f8c3bf91aac51b668fa78c3173c885760c Mon Sep 17 00:00:00 2001
+From: Petr Gotthard <petr.gotthard@centrum.cz>
+Date: Sat, 17 Jul 2021 21:29:25 +0200
+Subject: FAPI Test: Use EVP_PKEY_base_id to detect key type
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+The EVP_PKEY_base_id is the right way to detect key type, used also
+by OpenSSL itself.
+This function is available since OpenSSL 1.0.0.
+
+Signed-off-by: Petr Gotthard <petr.gotthard@centrum.cz>
+---
+ test/integration/fapi-data-crypt.int.c               | 2 +-
+ test/integration/fapi-key-create-policy-signed.int.c | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/test/integration/fapi-data-crypt.int.c b/test/integration/fapi-data-crypt.int.c
+index d42466db..a95cc9ef 100644
+--- a/test/integration/fapi-data-crypt.int.c
++++ b/test/integration/fapi-data-crypt.int.c
+@@ -133,7 +133,7 @@ signatureCallback(
+         goto_error(r, TSS2_FAPI_RC_GENERAL_FAILURE, "OSSL sign init.",
+                    error_cleanup);
+     }
+-    if (EVP_PKEY_type(EVP_PKEY_id(priv_key)) == EVP_PKEY_RSA) {
++    if (EVP_PKEY_base_id(priv_key) == EVP_PKEY_RSA) {
+         int signing_scheme = RSA_SIG_SCHEME;
+         if (1 != EVP_PKEY_CTX_set_rsa_padding(pctx, signing_scheme)) {
+             goto_error(r, TSS2_FAPI_RC_GENERAL_FAILURE, "OSSL set RSA padding.",
+diff --git a/test/integration/fapi-key-create-policy-signed.int.c b/test/integration/fapi-key-create-policy-signed.int.c
+index b903dec0..8f917d35 100644
+--- a/test/integration/fapi-key-create-policy-signed.int.c
++++ b/test/integration/fapi-key-create-policy-signed.int.c
+@@ -148,7 +148,7 @@ signatureCallback(
+         goto_error(r, TSS2_FAPI_RC_GENERAL_FAILURE, "OSSL sign init.",
+                    error_cleanup);
+     }
+-    if (EVP_PKEY_type(EVP_PKEY_id(priv_key)) == EVP_PKEY_RSA) {
++    if (EVP_PKEY_base_id(priv_key) == EVP_PKEY_RSA) {
+         int signing_scheme = RSA_SIG_SCHEME;
+         if (1 != EVP_PKEY_CTX_set_rsa_padding(pctx, signing_scheme)) {
+             goto_error(r, TSS2_FAPI_RC_GENERAL_FAILURE, "OSSL set RSA padding.",
+-- 
+2.26.3
+

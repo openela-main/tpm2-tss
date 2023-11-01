@@ -1,0 +1,65 @@
+From 090a10a69340dc0825f611eceac60bf3f904a5ec Mon Sep 17 00:00:00 2001
+From: Petr Gotthard <petr.gotthard@centrum.cz>
+Date: Sat, 17 Jul 2021 22:43:00 +0200
+Subject: Require OpenSSL >= 1.1.0
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+To reduce the amount of version-specific code we drop support for
+OpenSSL prior 1.1.0, including all forks such as LibreSSL, which are
+not API compatible with OpenSSL >= 1.1.0.
+
+Python 3.10 will even require OpenSSL >= 1.1.1. The corresponding
+PEP 644 contains a detailed impact analysis which is also relevant
+here.
+
+Signed-off-by: Petr Gotthard <petr.gotthard@centrum.cz>
+---
+ INSTALL.md   | 3 +--
+ configure.ac | 6 +++++-
+ 2 files changed, 6 insertions(+), 3 deletions(-)
+
+diff --git a/INSTALL.md b/INSTALL.md
+index eec94c45..658e1f28 100644
+--- a/INSTALL.md
++++ b/INSTALL.md
+@@ -14,7 +14,7 @@ following sections describe them for the supported platforms.
+ * C library development libraries and header files
+ * pkg-config
+ * doxygen
+-* OpenSSL development libraries and header files
++* OpenSSL development libraries and header files, version >= 1.1.0
+ * libcurl development libraries
+ 
+ The following are dependencies only required when building test suites.
+@@ -71,7 +71,6 @@ C Runtime (UCRT) version 10.0.16299.0. Building the type marshaling library
+ (tss2-mu.dll) and the system API (tss2-sapi.dll) should be as simple as
+ loading the tpm2-tss solution (tpm2-tss.sln) with a compatible and properly
+ configured version of Visual Studio 2017 and pressing the 'build' button.
+-Windows build setup requires OpenSSL >= v1.0.2 crypto library.
+ 
+ ### References
+ Visual Studio 2017 with "Clang for Windows": https://blogs.msdn.microsoft.com/vcblog/2017/03/07/use-any-c-compiler-with-visual-studio/
+diff --git a/configure.ac b/configure.ac
+index d4324c9a..12baa257 100755
+--- a/configure.ac
++++ b/configure.ac
+@@ -132,9 +132,13 @@ AC_ARG_WITH([crypto],
+ AM_CONDITIONAL(ESYS_OSSL, test "x$with_crypto" = "xossl")
+ AM_CONDITIONAL(ESYS_MBED, test "x$with_crypto" = "xmbed")
+ 
++m4_define([ossl_min_version], [1.1.0])
++m4_define([ossl_err], [OpenSSL libcrypto is missing or version requirements not met. OpenSSL version must be >= ossl_min_version])
+ AS_IF([test "x$enable_esys" = xyes],
+       [AS_IF([test "x$with_crypto" = xossl], [
+-           PKG_CHECK_MODULES([LIBCRYPTO], [libcrypto])
++           PKG_CHECK_MODULES([LIBCRYPTO],
++                             [libcrypto >= ossl_min_version],,
++                             [AC_MSG_ERROR([ossl_err])])
+            AC_DEFINE([OSSL], [1], [OpenSSL cryptographic backend])
+            TSS2_ESYS_CFLAGS_CRYPTO="$LIBCRYPTO_CFLAGS"
+            TSS2_ESYS_LDFLAGS_CRYPTO="$LIBCRYPTO_LIBS"
+-- 
+2.26.3
+

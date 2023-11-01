@@ -1,0 +1,27 @@
+From ba3ba5c4ec4f0362a0915c5ae5e002c9cbdc9f1e Mon Sep 17 00:00:00 2001
+From: JerryDevis <JerryDevis@users.noreply.github.com>
+Date: Wed, 5 Jan 2022 22:09:26 +0800
+Subject: [PATCH 14/23] FAPI:Fixed the memory leak of command->data when
+ Fapi_GetEsysBlob_Finish failed
+
+Signed-off-by: JerryDevis <JerryDevis@users.noreply.github.com>
+---
+ src/tss2-fapi/api/Fapi_GetEsysBlob.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/tss2-fapi/api/Fapi_GetEsysBlob.c b/src/tss2-fapi/api/Fapi_GetEsysBlob.c
+index a54bece8..b152ae3a 100644
+--- a/src/tss2-fapi/api/Fapi_GetEsysBlob.c
++++ b/src/tss2-fapi/api/Fapi_GetEsysBlob.c
+@@ -395,7 +395,7 @@ error_cleanup:
+     ifapi_cleanup_ifapi_object(object);
+     ifapi_cleanup_ifapi_object(key_object);
+     SAFE_FREE(command->path);
+-    SAFE_FREE(*data);
++    SAFE_FREE(command->data);
+     SAFE_FREE(key_context);
+     ifapi_session_clean(context);
+     ifapi_cleanup_ifapi_object(&context->loadKey.auth_object);
+-- 
+2.34.3
+

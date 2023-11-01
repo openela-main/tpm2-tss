@@ -1,0 +1,99 @@
+From 446aef29b5e5d376a3724dbf95c851ac82baeb7f Mon Sep 17 00:00:00 2001
+From: William Roberts <william.c.roberts@intel.com>
+Date: Thu, 19 Nov 2020 11:09:56 -0600
+Subject: [PATCH 01/23] esys_crypto_ossl: remove non-needed _ex OSSL funcs
+
+Some of the OSSL _ex suffixed routines remained even after the ENGINE
+pointer was removed. The _ex functions with NULL engine don't do
+anything different then the non _ex suffixed ones. One _ex routine
+remains, RSA_generate_key_ex, becuase the _ex version is deprecated.
+
+Signed-off-by: William Roberts <william.c.roberts@intel.com>
+---
+ src/tss2-esys/esys_crypto_ossl.c | 23 +++++++++++------------
+ 1 file changed, 11 insertions(+), 12 deletions(-)
+
+diff --git a/src/tss2-esys/esys_crypto_ossl.c b/src/tss2-esys/esys_crypto_ossl.c
+index 392f97ae..6856e92d 100644
+--- a/src/tss2-esys/esys_crypto_ossl.c
++++ b/src/tss2-esys/esys_crypto_ossl.c
+@@ -136,10 +136,9 @@ iesys_cryptossl_hash_start(IESYS_CRYPTO_CONTEXT_BLOB ** context,
+         goto_error(r, TSS2_ESYS_RC_GENERAL_FAILURE, "Error EVP_MD_CTX_create", cleanup);
+     }
+ 
+-    if (1 != EVP_DigestInit_ex(mycontext->hash.ossl_context,
+-                               mycontext->hash.ossl_hash_alg,
+-                               NULL)) {
+-        goto_error(r, TSS2_ESYS_RC_GENERAL_FAILURE, "Errror EVP_DigestInit_ex", cleanup);
++    if (1 != EVP_DigestInit(mycontext->hash.ossl_context,
++                               mycontext->hash.ossl_hash_alg)) {
++        goto_error(r, TSS2_ESYS_RC_GENERAL_FAILURE, "Errror EVP_DigestInit", cleanup);
+     }
+ 
+     *context = (IESYS_CRYPTO_CONTEXT_BLOB *) mycontext;
+@@ -241,13 +240,13 @@ iesys_cryptossl_hash_finish(IESYS_CRYPTO_CONTEXT_BLOB ** context,
+         return_error(TSS2_ESYS_RC_BAD_SIZE, "Buffer too small");
+     }
+ 
+-    if (1 != EVP_DigestFinal_ex(mycontext->hash.ossl_context, buffer, &digest_size)) {
++    if (1 != EVP_DigestFinal(mycontext->hash.ossl_context, buffer, &digest_size)) {
+         return_error(TSS2_ESYS_RC_GENERAL_FAILURE, "Ossl error.");
+     }
+ 
+     if (digest_size != mycontext->hash.hash_len) {
+         return_error(TSS2_ESYS_RC_GENERAL_FAILURE,
+-                     "Invalid size computed by EVP_DigestFinal_ex");
++                     "Invalid size computed by EVP_DigestFinal");
+     }
+ 
+     LOGBLOB_TRACE(buffer, mycontext->hash.hash_len, "read hash result");
+@@ -1056,11 +1055,11 @@ iesys_cryptossl_sym_aes_encrypt(uint8_t * key,
+                    "Initialize cipher context", cleanup);
+     }
+ 
+-    if (1 != EVP_EncryptInit_ex(ctx, cipher_alg, NULL, key, iv)) {
++    if (1 != EVP_EncryptInit(ctx, cipher_alg,key, iv)) {
+         goto_error(r, TSS2_ESYS_RC_GENERAL_FAILURE,
+                    "Initialize cipher operation", cleanup);
+     }
+-    if (1 != EVP_EncryptInit_ex(ctx, NULL, NULL, key, iv)) {
++    if (1 != EVP_EncryptInit(ctx, NULL, key, iv)) {
+         goto_error(r, TSS2_ESYS_RC_GENERAL_FAILURE, "Set key and iv", cleanup);
+     }
+ 
+@@ -1069,7 +1068,7 @@ iesys_cryptossl_sym_aes_encrypt(uint8_t * key,
+         goto_error(r, TSS2_ESYS_RC_GENERAL_FAILURE, "Encrypt update", cleanup);
+     }
+ 
+-    if (1 != EVP_EncryptFinal_ex(ctx, buffer, &cipher_len)) {
++    if (1 != EVP_EncryptFinal(ctx, buffer, &cipher_len)) {
+         goto_error(r, TSS2_ESYS_RC_GENERAL_FAILURE, "Encrypt final", cleanup);
+     }
+     LOGBLOB_TRACE(buffer, buffer_size, "IESYS AES output");
+@@ -1144,12 +1143,12 @@ iesys_cryptossl_sym_aes_decrypt(uint8_t * key,
+ 
+     LOGBLOB_TRACE(buffer, buffer_size, "IESYS AES input");
+ 
+-    if (1 != EVP_DecryptInit_ex(ctx, cipher_alg, NULL, key, iv)) {
++    if (1 != EVP_DecryptInit(ctx, cipher_alg, key, iv)) {
+         goto_error(r, TSS2_ESYS_RC_GENERAL_FAILURE,
+                    "Initialize cipher operation", cleanup);
+     }
+ 
+-    if (1 != EVP_DecryptInit_ex(ctx, NULL, NULL, key, iv)) {
++    if (1 != EVP_DecryptInit(ctx, NULL, key, iv)) {
+         goto_error(r, TSS2_ESYS_RC_GENERAL_FAILURE, "Set key and iv", cleanup);
+     }
+ 
+@@ -1158,7 +1157,7 @@ iesys_cryptossl_sym_aes_decrypt(uint8_t * key,
+         goto_error(r, TSS2_ESYS_RC_GENERAL_FAILURE, "Encrypt update", cleanup);
+     }
+ 
+-    if (1 != EVP_DecryptFinal_ex(ctx, buffer, &cipher_len)) {
++    if (1 != EVP_DecryptFinal(ctx, buffer, &cipher_len)) {
+         goto_error(r, TSS2_ESYS_RC_GENERAL_FAILURE, "Encrypt final", cleanup);
+     }
+     LOGBLOB_TRACE(buffer, buffer_size, "IESYS AES output");
+-- 
+2.34.3
+
