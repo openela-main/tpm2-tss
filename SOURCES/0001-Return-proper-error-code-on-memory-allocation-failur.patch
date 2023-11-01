@@ -1,0 +1,25 @@
+From 93aab9433b5d66a916e28016a4b60c4a1c39acfc Mon Sep 17 00:00:00 2001
+From: Pieter Agten <pieter.agten@gmail.com>
+Date: Tue, 3 Dec 2019 20:52:29 +0100
+Subject: [PATCH] Return proper error code on memory allocation failure
+
+Signed-off-by: Pieter Agten <pieter.agten@gmail.com>
+---
+ src/tss2-tcti/tctildr.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/src/tss2-tcti/tctildr.c b/src/tss2-tcti/tctildr.c
+index ff967317b57b..1528f6e52fd0 100644
+--- a/src/tss2-tcti/tctildr.c
++++ b/src/tss2-tcti/tctildr.c
+@@ -421,6 +421,7 @@ Tss2_TctiLdr_Initialize_Ex (const char *name,
+     }
+     ldr_ctx = calloc (1, sizeof (TSS2_TCTILDR_CONTEXT));
+     if (ldr_ctx == NULL) {
++        rc = TSS2_TCTI_RC_MEMORY;
+         goto err;
+     }
+     TSS2_TCTI_MAGIC (ldr_ctx) = TCTILDR_MAGIC;
+-- 
+2.27.0
+

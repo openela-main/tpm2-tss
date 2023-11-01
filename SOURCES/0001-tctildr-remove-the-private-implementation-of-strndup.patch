@@ -1,0 +1,96 @@
+From 464da22b71e26421f55d4e8abc14711f89c89a28 Mon Sep 17 00:00:00 2001
+From: Tadeusz Struk <tadeusz.struk@intel.com>
+Date: Thu, 20 Feb 2020 14:11:43 -0800
+Subject: [PATCH] tctildr: remove the private implementation of strndup
+
+In fact the private implementation of strndup is only
+needed for windows.
+
+Fixes: #1633
+
+Signed-off-by: Tadeusz Struk <tadeusz.struk@intel.com>
+---
+ configure.ac            |  2 +-
+ src/tss2-tcti/tctildr.c | 37 +++++++++++++++++--------------------
+ 2 files changed, 18 insertions(+), 21 deletions(-)
+
+diff --git a/configure.ac b/configure.ac
+index d7724805966b..aa4ffb1b78a1 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -45,7 +45,6 @@ case "${host_os}" in
+ esac
+ AC_SUBST([LIBSOCKET_LDFLAGS])
+ 
+-AC_CHECK_FUNCS([strndup])
+ AC_ARG_ENABLE([unit],
+             [AS_HELP_STRING([--enable-unit],
+                             [build cmocka unit tests])],,
+@@ -65,6 +64,7 @@ AC_ARG_ENABLE([esapi],
+ 
+ AM_CONDITIONAL(ESAPI, test "x$enable_esapi" = "xyes")
+ 
++AC_CHECK_FUNC([strndup],[],[AC_MSG_ERROR([strndup function not found])])
+ AC_ARG_ENABLE([tcti-device-async],
+     AS_HELP_STRING([--enable-tcti-device-async],
+ 	           [Enable asynchronus operation on TCTI device
+diff --git a/src/tss2-tcti/tctildr.c b/src/tss2-tcti/tctildr.c
+index a46b301b3ea7..92af1d3a787d 100644
+--- a/src/tss2-tcti/tctildr.c
++++ b/src/tss2-tcti/tctildr.c
+@@ -15,8 +15,25 @@
+ #include <linux/limits.h>
+ #elif defined(_MSC_VER)
+ #include <windows.h>
++#include <limits.h>
+ #ifndef PATH_MAX
+ #define PATH_MAX MAX_PATH
++
++static char *strndup(const char* s, size_t n)
++{
++    char *dst = NULL;
++
++    if (n + 1 >= USHRT_MAX)
++        return NULL;
++
++    dst = calloc(1, n + 1);
++
++    if (dst == NULL)
++        return NULL;
++
++    memcpy(dst, s, n);
++    return dst;
++}
+ #endif
+ #else
+ #include <limits.h>
+@@ -268,26 +285,6 @@ Tss2_TctiLdr_Finalize (TSS2_TCTI_CONTEXT **tctiContext)
+     *tctiContext = NULL;
+ }
+ 
+-#if !defined(HAVE_STRNDUP)
+-char*
+-strndup (const char* s,
+-         size_t n)
+-{
+-    char* dst = NULL;
+-
+-    if (n + 1 < n) {
+-        return NULL;
+-    }
+-    dst = calloc(1, n + 1);
+-    if (dst == NULL) {
+-        return NULL;
+-    }
+-    memcpy(dst, s, n);
+-
+-    return dst;
+-}
+-#endif /* HAVE_STRNDUP */
+-
+ TSS2_RC
+ copy_info (const TSS2_TCTI_INFO *info_src,
+            TSS2_TCTI_INFO *info_dst)
+-- 
+2.30.1
+

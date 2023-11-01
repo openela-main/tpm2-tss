@@ -1,0 +1,39 @@
+From 3d3808c3eb02c27f1b114baddd03960892044909 Mon Sep 17 00:00:00 2001
+From: Tadeusz Struk <tadeusz.struk@intel.com>
+Date: Mon, 2 Mar 2020 14:45:52 -0800
+Subject: [PATCH] esys: fix hmac calculation for tpm2_clear command
+
+After tpm2_clear command is executed it sets all ownerAuth,
+endorsementAuth, and lockoutAuth to the Empty Buffer and then
+this is used for a response auth calculation.
+This requires to recalculate the esys session auth value after
+tpm2_clear is executed or the calculated response HMAC value
+will be invalid and the command will fail with
+err: 0x0007001b "Authorizing the TPM response failed"
+
+Fixes: #1641
+
+Signed-off-by: Tadeusz Struk <tadeusz.struk@intel.com>
+---
+ src/tss2-esys/api/Esys_Clear.c | 5 +++++
+ 1 file changed, 5 insertions(+)
+
+diff --git a/src/tss2-esys/api/Esys_Clear.c b/src/tss2-esys/api/Esys_Clear.c
+index f5c0b827425a..0f43f7e9b85f 100644
+--- a/src/tss2-esys/api/Esys_Clear.c
++++ b/src/tss2-esys/api/Esys_Clear.c
+@@ -199,6 +199,11 @@ Esys_Clear_Async(
+     return_state_if_error(r, _ESYS_STATE_INTERNALERROR,
+                           "Finish (Execute Async)");
+ 
++    /* If the command authorization is LOCKOUT we need to
++     * recompute session value with an empty auth */
++    if (authHandle == ESYS_TR_RH_LOCKOUT)
++        iesys_compute_session_value(esysContext->session_tab[0], NULL, NULL);
++
+     esysContext->state = _ESYS_STATE_SENT;
+ 
+     return r;
+-- 
+2.30.1
+

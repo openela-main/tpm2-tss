@@ -1,0 +1,128 @@
+From 70e9fae7ef535e7cf27a72ddbc818dfefcbdbdbb Mon Sep 17 00:00:00 2001
+From: William Roberts <william.c.roberts@intel.com>
+Date: Wed, 18 Sep 2019 11:29:57 -0700
+Subject: [PATCH] Esys_CreateLoaded: fix resource name calculation
+
+The name calculated and cached for the ESYS_TR resource object was based
+on the user supplied TPMT_PUBLIC. However, this template is often
+missing data that the TPM fills in and returns in the TPM2B_PUBLIC
+structure. Because of this, the cached name returned from
+Esys_TR_GetName() and the name read from Esys_ReadPublic() would differ.
+
+Add a test to detect this condition and correct it by copying the
+returned TPM2B_PUBLIC to the ESYS_TR resource nodes TPM2B_PUBLIC cache
+and calculate the name off of that.
+
+Fixes: #1516
+
+Signed-off-by: William Roberts <william.c.roberts@intel.com>
+---
+ src/tss2-esys/api/Esys_CreateLoaded.c    | 14 ++++-----
+ test/integration/esys-createloaded.int.c | 37 ++++++++++++++++++++++++
+ 2 files changed, 42 insertions(+), 9 deletions(-)
+
+diff --git a/src/tss2-esys/api/Esys_CreateLoaded.c b/src/tss2-esys/api/Esys_CreateLoaded.c
+index a92649cade27..44c4400fcff9 100644
+--- a/src/tss2-esys/api/Esys_CreateLoaded.c
++++ b/src/tss2-esys/api/Esys_CreateLoaded.c
+@@ -317,14 +317,6 @@ Esys_CreateLoaded_Finish(
+         goto_error(r, TSS2_ESYS_RC_MEMORY, "Out of memory", error_cleanup);
+     }
+ 
+-    /* Update the meta data of the ESYS_TR object */
+-    objectHandleNode->rsrc.rsrcType = IESYSC_KEY_RSRC;
+-    size_t offset = 0;
+-    r = Tss2_MU_TPMT_PUBLIC_Unmarshal(&esysContext->in.CreateLoaded.inPublic->buffer[0],
+-                                      sizeof(TPMT_PUBLIC), &offset ,
+-                                      &objectHandleNode->rsrc.misc.rsrc_key_pub.publicArea);
+-    goto_if_error(r, "Unmarshal TPMT_PUBULIC", error_cleanup);
+-
+     /*Receive the TPM response and handle resubmissions if necessary. */
+     r = Tss2_Sys_ExecuteFinish(esysContext->sys, esysContext->timeout);
+     if ((r & ~TSS2_RC_LAYER_MASK) == TSS2_BASE_RC_TRY_AGAIN) {
+@@ -386,8 +378,12 @@ Esys_CreateLoaded_Finish(
+                         error_cleanup);
+ 
+ 
++    /* Update the meta data of the ESYS_TR object */
++    objectHandleNode->rsrc.rsrcType = IESYSC_KEY_RSRC;
++    objectHandleNode->rsrc.misc.rsrc_key_pub = *loutPublic;
++
+     /* Check name and outPublic for consistency */
+-    if (!iesys_compare_name(loutPublic, &name))
++    if (!iesys_compare_name(&objectHandleNode->rsrc.misc.rsrc_key_pub, &name))
+         goto_error(r, TSS2_ESYS_RC_MALFORMED_RESPONSE,
+             "in Public name not equal name in response", error_cleanup);
+ 
+diff --git a/test/integration/esys-createloaded.int.c b/test/integration/esys-createloaded.int.c
+index ec8d68a0d43d..118f2a3bb1ff 100644
+--- a/test/integration/esys-createloaded.int.c
++++ b/test/integration/esys-createloaded.int.c
+@@ -8,6 +8,7 @@
+ #include <config.h>
+ #endif
+ 
++#include <stdbool.h>
+ #include <stdlib.h>
+ 
+ #include "tss2_esys.h"
+@@ -19,6 +20,35 @@
+ #include "util/log.h"
+ #include "util/aux_util.h"
+ 
++static bool check_name(ESYS_CONTEXT * esys_context, ESYS_TR object_handle)
++{
++    bool result = false;
++
++    TPM2B_NAME *read_name = NULL;
++    TPM2B_NAME *get_name = NULL;
++
++    TSS2_RC r = Esys_ReadPublic(esys_context, object_handle,
++                                ESYS_TR_NONE, ESYS_TR_NONE, ESYS_TR_NONE,
++                                NULL, &read_name, NULL);
++    goto_if_error(r, "Error esys readpublic", out);
++
++    r = Esys_TR_GetName(esys_context, object_handle, &get_name);
++    goto_if_error(r, "Error esys getname", out);
++
++    if (read_name->size != get_name->size) {
++        LOG_ERROR("name size mismatch %u != %u",
++                  read_name->size, get_name->size);
++        goto out;
++    }
++
++    result = memcmp(read_name->name, get_name->name, get_name->size) == 0;
++
++out:
++    free(read_name);
++    free(get_name);
++
++    return result;
++}
+ /** This test is intended to test the ESAPI command CreateLoaded.
+  *
+  * We start by creating a primary key (Esys_CreatePrimary).
+@@ -29,6 +59,8 @@
+  *  - Esys_CreatePrimary() (M)
+  *  - Esys_FlushContext() (M)
+  *  - Esys_StartAuthSession() (M)
++ *  - Esys_TR_GetName() (M)
++ *  - Esys_TR_ReadPublic() (M)
+  *
+  * Used compiler defines: TEST_SESSION
+  *
+@@ -239,6 +271,11 @@ test_esys_createloaded(ESYS_CONTEXT * esys_context)
+ 
+     goto_if_error(r, "Error During CreateLoaded", error);
+ 
++    bool names_match = check_name(esys_context, objectHandle);
++    if (!names_match) {
++        goto error;
++    }
++
+     r = Esys_FlushContext(esys_context, primaryHandle);
+     goto_if_error(r, "Flushing context", error);
+ 
+-- 
+2.27.0
+

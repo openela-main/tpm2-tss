@@ -1,0 +1,47 @@
+From 380d5f9ec3aa1f5e456598fe66d275467660177b Mon Sep 17 00:00:00 2001
+From: Tadeusz Struk <tadeusz.struk@intel.com>
+Date: Thu, 16 Jan 2020 09:27:04 -0800
+Subject: [PATCH] esys: fixup compute_encrypted_salt err handling in
+ Esys_StartAuthSession
+
+Use return_state_if_error() macro for compute_encrypted_salt()
+error handling in Esys_StartAuthSession to maintain the correct
+context state.
+
+Signed-off-by: Tadeusz Struk <tadeusz.struk@intel.com>
+---
+ src/tss2-esys/api/Esys_StartAuthSession.c | 13 ++++---------
+ 1 file changed, 4 insertions(+), 9 deletions(-)
+
+diff --git a/src/tss2-esys/api/Esys_StartAuthSession.c b/src/tss2-esys/api/Esys_StartAuthSession.c
+index 3ccd842a7572..1717928a717d 100644
+--- a/src/tss2-esys/api/Esys_StartAuthSession.c
++++ b/src/tss2-esys/api/Esys_StartAuthSession.c
+@@ -223,20 +223,15 @@ Esys_StartAuthSession_Async(
+     TSS2_RC r2;
+     r2 = iesys_compute_encrypted_salt(esysContext, tpmKeyNode,
+                                       &encryptedSaltAux);
+-    return_if_error(r2, "Error in parameter encryption.");
++    return_state_if_error(r2, _ESYS_STATE_INIT, "Error in parameter encryption.");
+ 
+     if (nonceCaller == NULL) {
+         r2 = iesys_crypto_hash_get_digest_size(authHash,&authHash_size);
+-        if (r2 != TSS2_RC_SUCCESS) {
+-            LOG_ERROR("Error: initialize auth session (%x).", r2);
+-            return r2;
+-        }
++        return_state_if_error(r2, _ESYS_STATE_INIT, "Error in hash_get_digest_size.");
++
+         r2 = iesys_crypto_random2b(&esysContext->in.StartAuthSession.nonceCallerData,
+                                    authHash_size);
+-        if (r2 != TSS2_RC_SUCCESS) {
+-            LOG_ERROR("Error: initialize auth session (%x).", r2);
+-            return r2;
+-        }
++        return_state_if_error(r2, _ESYS_STATE_INIT, "Error in crypto_random2b.");
+         esysContext->in.StartAuthSession.nonceCaller
+            = &esysContext->in.StartAuthSession.nonceCallerData;
+         nonceCaller = esysContext->in.StartAuthSession.nonceCaller;
+-- 
+2.27.0
+
