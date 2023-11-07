@@ -1,0 +1,65 @@
+From eb2fd8b436688377a20d24a467fd03e62d3e6c06 Mon Sep 17 00:00:00 2001
+From: William Roberts <william.c.roberts@intel.com>
+Date: Tue, 24 Jan 2023 10:01:23 -0600
+Subject: [PATCH 01/10] tss2-rc: fix unknown layer handler dropping bits
+
+The commit (on 4.0.1 and master):
+  - 49107d65d5c7 tss2_rc: ensure layer number is in bounds
+
+Introduces a bug where the right shift by 8 drops the lower byte going
+into the unknown_layer handler function. This will effectively drop rc
+error bits for unknown layers. The largest impact will be on windows
+where their resource manager is not a registered handler.
+
+Fix this by just dumping all the bytes and not get fancy with masking
+things out.
+
+Fixes: #2550
+
+Signed-off-by: William Roberts <william.c.roberts@intel.com>
+---
+ src/tss2-rc/tss2_rc.c    | 4 ++--
+ test/unit/test_tss2_rc.c | 4 ++--
+ 2 files changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/src/tss2-rc/tss2_rc.c b/src/tss2-rc/tss2_rc.c
+index 7e668a46..6de7d6f3 100644
+--- a/src/tss2-rc/tss2_rc.c
++++ b/src/tss2-rc/tss2_rc.c
+@@ -985,9 +985,9 @@ Tss2_RC_Decode(TSS2_RC rc)
+     } else {
+         /*
+          * we don't want to drop any bits if we don't know what to do with it
+-         * so drop the layer byte since we we already have that.
++         * so just send the whole thing.
+          */
+-        const char *e = unknown_layer_handler(rc >> 8);
++        const char *e = unknown_layer_handler(rc);
+         assert(e);
+         catbuf(buf, "%s", e);
+     }
+diff --git a/test/unit/test_tss2_rc.c b/test/unit/test_tss2_rc.c
+index 0b0f57c6..e5051c85 100644
+--- a/test/unit/test_tss2_rc.c
++++ b/test/unit/test_tss2_rc.c
+@@ -199,7 +199,7 @@ test_custom_handler(void **state)
+      * Test an unknown layer
+      */
+     e = Tss2_RC_Decode(rc);
+-    assert_string_equal(e, "1:0x100");
++    assert_string_equal(e, "1:0x1002A");
+ }
+ 
+ static void
+@@ -288,7 +288,7 @@ test_all_FFs(void **state)
+     (void) state;
+ 
+     const char *e = Tss2_RC_Decode(0xFFFFFFFF);
+-    assert_string_equal(e, "255:0xFFFFFF");
++    assert_string_equal(e, "255:0xFFFFFFFF");
+ }
+ 
+ static void
+-- 
+2.41.0
+

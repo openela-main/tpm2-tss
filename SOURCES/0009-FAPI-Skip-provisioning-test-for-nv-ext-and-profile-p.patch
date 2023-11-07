@@ -1,0 +1,39 @@
+From e43323dd5c089ed6af0a6a77b30f97350e1fbb6a Mon Sep 17 00:00:00 2001
+From: Juergen Repp <juergen_repp@web.de>
+Date: Sun, 9 Apr 2023 08:38:56 +0200
+Subject: [PATCH 09/10] FAPI: Skip provisioning test for nv ext and profile
+ paths.
+
+The provisioning test in ifapi_check_provisioned will be skipped
+for ext nv and profile paths. The test did produce inappropriate
+error messages if the corresponding paths did not exist in keystore.
+The test is only needed for pathnames starting with the profile.
+Fixes: #2596
+
+Signed-off-by: Juergen Repp <juergen_repp@web.de>
+---
+ src/tss2-fapi/ifapi_keystore.c | 8 ++++++++
+ 1 file changed, 8 insertions(+)
+
+diff --git a/src/tss2-fapi/ifapi_keystore.c b/src/tss2-fapi/ifapi_keystore.c
+index 7e50ee1e..38c2f7fd 100644
+--- a/src/tss2-fapi/ifapi_keystore.c
++++ b/src/tss2-fapi/ifapi_keystore.c
+@@ -1772,6 +1772,14 @@ ifapi_check_provisioned(
+ 
+     *ok = false;
+ 
++    /* No profile in path, test can be skipped. */
++    if (ifapi_path_type_p(rel_path, IFAPI_NV_PATH) ||
++        ifapi_path_type_p(rel_path, IFAPI_POLICY_PATH) ||
++        ifapi_path_type_p(rel_path, IFAPI_EXT_PATH)) {
++        *ok = true;
++        return TSS2_RC_SUCCESS;
++    }
++
+     /* First expand path in user directory  */
+     r = expand_path(keystore, rel_path, &directory);
+     goto_if_error(r, "Expand path", cleanup);
+-- 
+2.41.0
+

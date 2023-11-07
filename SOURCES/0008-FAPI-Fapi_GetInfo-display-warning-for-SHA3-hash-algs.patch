@@ -1,0 +1,35 @@
+From acb274ee0c59d6159b66e2df08aaf410e179f5f9 Mon Sep 17 00:00:00 2001
+From: Juergen Repp <juergen_repp@web.de>
+Date: Mon, 10 Apr 2023 20:20:24 +0200
+Subject: [PATCH 08/10] FAPI: Fapi_GetInfo display warning for SHA3 hash algs.
+
+Currenlty FAPI_GetInfo did produce errors if the TPM implements
+SHA3 hash algs. Now a warning is displayed.
+
+Signed-off-by: Juergen Repp <juergen_repp@web.de>
+---
+ src/tss2-fapi/tpm_json_serialize.c | 8 ++++++++
+ 1 file changed, 8 insertions(+)
+
+diff --git a/src/tss2-fapi/tpm_json_serialize.c b/src/tss2-fapi/tpm_json_serialize.c
+index 1eaa4eb2..65320da6 100644
+--- a/src/tss2-fapi/tpm_json_serialize.c
++++ b/src/tss2-fapi/tpm_json_serialize.c
+@@ -1558,6 +1558,14 @@ ifapi_json_TPMS_ALG_PROPERTY_serialize(const TPMS_ALG_PROPERTY *in, json_object
+     return_if_null(in, "Bad reference.", TSS2_FAPI_RC_BAD_REFERENCE);
+ 
+     TSS2_RC r;
++
++    if ((in->alg == TPM2_ALG_SHA3_256 ||
++         in->alg == TPM2_ALG_SHA3_384 ||
++         in->alg == TPM2_ALG_SHA3_512)) {
++        LOG_WARNING("SHA3 hash algs are not supported by TSS");
++        return TSS2_RC_SUCCESS;
++    }
++
+     json_object *jso2;
+     if (*jso == NULL)
+         *jso = json_object_new_object ();
+-- 
+2.41.0
+

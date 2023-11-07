@@ -1,0 +1,59 @@
+From c7cd976e7152e3f5aaa813aaebf4ab1e5d9b1f3e Mon Sep 17 00:00:00 2001
+From: Juergen Repp <juergen_repp@web.de>
+Date: Sun, 5 Mar 2023 19:19:22 +0100
+Subject: [PATCH 05/10] FAPI: Fix missing parameter encryption for some HMAC
+ sessions.
+
+* For Fapi_CreateNv and Fap_NvSetBits the parameter encryption was not enabled.
+* For Fapi_Unseal the response description was not enabled.
+
+Signed-off-by: Juergen Repp <juergen_repp@web.de>
+---
+ src/tss2-fapi/api/Fapi_CreateNv.c  | 2 +-
+ src/tss2-fapi/api/Fapi_NvSetBits.c | 2 +-
+ src/tss2-fapi/fapi_util.c          | 3 ++-
+ 3 files changed, 4 insertions(+), 3 deletions(-)
+
+diff --git a/src/tss2-fapi/api/Fapi_CreateNv.c b/src/tss2-fapi/api/Fapi_CreateNv.c
+index 45e72e33..8160b99d 100644
+--- a/src/tss2-fapi/api/Fapi_CreateNv.c
++++ b/src/tss2-fapi/api/Fapi_CreateNv.c
+@@ -399,7 +399,7 @@ Fapi_CreateNv_Finish(
+             context->primary_state = PRIMARY_INIT;
+             r = ifapi_get_sessions_async(context,
+                                          IFAPI_SESSION_GENEK | IFAPI_SESSION1,
+-                                         0, 0);
++                                         TPMA_SESSION_DECRYPT, 0);
+             goto_if_error_reset_state(r, "Create sessions", error_cleanup);
+             fallthrough;
+ 
+diff --git a/src/tss2-fapi/api/Fapi_NvSetBits.c b/src/tss2-fapi/api/Fapi_NvSetBits.c
+index 0615aa12..adf332e0 100644
+--- a/src/tss2-fapi/api/Fapi_NvSetBits.c
++++ b/src/tss2-fapi/api/Fapi_NvSetBits.c
+@@ -282,7 +282,7 @@ Fapi_NvSetBits_Finish(
+         /* Prepare session for authorization */
+         r = ifapi_get_sessions_async(context,
+                                      IFAPI_SESSION_GENEK | IFAPI_SESSION1,
+-                                     0, 0);
++                                     TPMA_SESSION_DECRYPT, 0);
+         goto_if_error_reset_state(r, "Create sessions", error_cleanup);
+ 
+         fallthrough;
+diff --git a/src/tss2-fapi/fapi_util.c b/src/tss2-fapi/fapi_util.c
+index 55ce3327..ef4a92d0 100644
+--- a/src/tss2-fapi/fapi_util.c
++++ b/src/tss2-fapi/fapi_util.c
+@@ -2743,7 +2743,8 @@ ifapi_load_key(
+         /* Prepare the session creation. */
+         r = ifapi_get_sessions_async(context,
+                                      IFAPI_SESSION_GENEK | IFAPI_SESSION1,
+-                                     TPMA_SESSION_DECRYPT, 0);
++                                     TPMA_SESSION_DECRYPT | TPMA_SESSION_ENCRYPT,
++                                     0);
+         goto_if_error_reset_state(r, "Create sessions", error_cleanup);
+         fallthrough;
+ 
+-- 
+2.41.0
+

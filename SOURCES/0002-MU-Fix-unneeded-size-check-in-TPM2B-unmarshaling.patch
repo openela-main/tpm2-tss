@@ -1,0 +1,65 @@
+From 6e4f8823ca6f7f062df3cd4ee88e397fac9adc37 Mon Sep 17 00:00:00 2001
+From: Juergen Repp <juergen_repp@web.de>
+Date: Thu, 9 Feb 2023 15:22:08 +0100
+Subject: [PATCH 02/10] MU: Fix unneeded size check in TPM2B unmarshaling
+
+There is a size check for the destination object whether the size is zero.
+If the memory of the destination object is no cleared this might cause
+a race conditions.
+Unneeded tests from the integration test tpmclient were removed.
+Fixes: #2564
+
+Signed-off-by: Juergen Repp <juergen_repp@web.de>
+---
+ src/tss2-mu/tpm2b-types.c      | 6 +-----
+ test/tpmclient/tpmclient.int.c | 9 ---------
+ 2 files changed, 1 insertion(+), 14 deletions(-)
+
+diff --git a/src/tss2-mu/tpm2b-types.c b/src/tss2-mu/tpm2b-types.c
+index 2e10f487..6e8915f6 100644
+--- a/src/tss2-mu/tpm2b-types.c
++++ b/src/tss2-mu/tpm2b-types.c
+@@ -248,11 +248,7 @@ TSS2_RC Tss2_MU_##type##_Unmarshal(uint8_t const buffer[], size_t buffer_size, \
+              sizeof(size)); \
+         return TSS2_MU_RC_INSUFFICIENT_BUFFER; \
+     } \
+-    if (dest && dest->size != 0) { \
+-        LOG_WARNING("Size not zero"); \
+-        return TSS2_SYS_RC_BAD_VALUE; \
+-    } \
+-\
++ \
+     rc = Tss2_MU_UINT16_Unmarshal(buffer, buffer_size, &local_offset, &size); \
+     if (rc) \
+         return rc; \
+diff --git a/test/tpmclient/tpmclient.int.c b/test/tpmclient/tpmclient.int.c
+index deedcfb7..16443955 100644
+--- a/test/tpmclient/tpmclient.int.c
++++ b/test/tpmclient/tpmclient.int.c
+@@ -847,12 +847,6 @@ static void TestHierarchyControl()
+     rval = Tss2_Sys_NV_DefineSpace( sysContext, TPM2_RH_PLATFORM, &sessionsData, &nvAuth, &publicInfo, 0 );
+     CheckPassed( rval );
+ 
+-    /* Test SYS for case where nvPublic.size != 0 */
+-    nvPublic.size = 0xff;
+-    INIT_SIMPLE_TPM2B_SIZE( nvName );
+-    rval = Tss2_Sys_NV_ReadPublic( sysContext, TPM20_INDEX_TEST1, 0, &nvPublic, &nvName, 0 );
+-    CheckFailed( rval, TSS2_SYS_RC_BAD_VALUE );
+-
+     nvPublic.size = 0;
+     INIT_SIMPLE_TPM2B_SIZE( nvName );
+     rval = Tss2_Sys_NV_ReadPublic( sysContext, TPM20_INDEX_TEST1, 0, &nvPublic, &nvName, 0 );
+@@ -2135,10 +2129,7 @@ static void EcEphemeralTest()
+ 
+     LOG_INFO("EC Ephemeral TESTS:" );
+ 
+-    /* Test SYS for case of Q size field not being set to 0. */
+     INIT_SIMPLE_TPM2B_SIZE( Q );
+-    rval = Tss2_Sys_EC_Ephemeral( sysContext, 0, TPM2_ECC_BN_P256, &Q, &counter, 0 );
+-    CheckFailed( rval, TSS2_SYS_RC_BAD_VALUE );
+ 
+     Q.size = 0;
+     rval = Tss2_Sys_EC_Ephemeral( sysContext, 0, TPM2_ECC_BN_P256, &Q, &counter, 0 );
+-- 
+2.41.0
+

@@ -1,0 +1,78 @@
+From d486edf730d652c8ab2fc50eb00e45223b43628f Mon Sep 17 00:00:00 2001
+From: Juergen Repp <juergen_repp@web.de>
+Date: Tue, 14 Feb 2023 19:52:28 +0100
+Subject: [PATCH 03/10] FAPI: Fix parameter encryption for provisioning
+
+Currently no parameter encryption was made during provisioning.
+Now the EK es used as tpmkey for the create primary session of
+the SRK and the SRK is used for parameter encryption of the
+other command executed during provisioning.
+
+Signed-off-by: Juergen Repp <juergen_repp@web.de>
+---
+ src/tss2-fapi/api/Fapi_Provision.c | 6 ++++--
+ src/tss2-fapi/fapi_int.h           | 7 ++++---
+ src/tss2-fapi/fapi_util.c          | 5 ++++-
+ 3 files changed, 12 insertions(+), 6 deletions(-)
+
+diff --git a/src/tss2-fapi/api/Fapi_Provision.c b/src/tss2-fapi/api/Fapi_Provision.c
+index 97c25828..48f2fd3b 100644
+--- a/src/tss2-fapi/api/Fapi_Provision.c
++++ b/src/tss2-fapi/api/Fapi_Provision.c
+@@ -884,7 +884,8 @@ Fapi_Provision_Finish(FAPI_CONTEXT *context)
+         statecase(context->state, PROVISION_INIT_SRK);
+             /* Create session which will be used for SRK generation. */
+             context->srk_handle = context->ek_handle;
+-            r = ifapi_get_sessions_async(context, IFAPI_SESSION1, 0, 0);
++            r = ifapi_get_sessions_async(context, IFAPI_SESSION_USE_SRK | IFAPI_SESSION1,
++                                         TPMA_SESSION_DECRYPT, 0);
+             goto_if_error_reset_state(r, "Create sessions", error_cleanup);
+ 
+             fallthrough;
+@@ -1084,7 +1085,8 @@ Fapi_Provision_Finish(FAPI_CONTEXT *context)
+             try_again_or_error_goto(r, "Cleanup", error_cleanup);
+ 
+             /* Create session which will be used for parameter encryption. */
+-            r = ifapi_get_sessions_async(context, IFAPI_SESSION1, 0, 0);
++            r = ifapi_get_sessions_async(context, IFAPI_SESSION_USE_SRK | IFAPI_SESSION1,
++                                         TPMA_SESSION_DECRYPT, 0);
+             goto_if_error_reset_state(r, "Create sessions", error_cleanup);
+ 
+             fallthrough;
+diff --git a/src/tss2-fapi/fapi_int.h b/src/tss2-fapi/fapi_int.h
+index 5f666a75..8533112a 100644
+--- a/src/tss2-fapi/fapi_int.h
++++ b/src/tss2-fapi/fapi_int.h
+@@ -55,9 +55,10 @@ typedef UINT32 TSS2_KEY_TYPE;
+ #define MAX_PLATFORM_CERT_HANDLE 0x01C0FFFF
+ 
+ typedef UINT8 IFAPI_SESSION_TYPE;
+-#define IFAPI_SESSION_GENEK 0x01
+-#define IFAPI_SESSION1      0x02
+-#define IFAPI_SESSION2      0x04
++#define IFAPI_SESSION_GENEK   0x01
++#define IFAPI_SESSION1        0x02
++#define IFAPI_SESSION2        0x04
++#define IFAPI_SESSION_USE_SRK 0x08
+ 
+ #define IFAPI_POLICY_PATH "policy"
+ #define IFAPI_NV_PATH "nv"
+diff --git a/src/tss2-fapi/fapi_util.c b/src/tss2-fapi/fapi_util.c
+index 44dd4168..ded0d247 100644
+--- a/src/tss2-fapi/fapi_util.c
++++ b/src/tss2-fapi/fapi_util.c
+@@ -1327,7 +1327,10 @@ ifapi_get_sessions_async(FAPI_CONTEXT *context,
+     context->session2_attribute_flags = attribute_flags2;
+     char *file = NULL;
+ 
+-    if (!(session_flags & IFAPI_SESSION_GENEK)) {
++    if (session_flags & IFAPI_SESSION_USE_SRK) {
++        context->session_state = SESSION_CREATE_SESSION;
++        return TSS2_RC_SUCCESS;
++    } else if (!(session_flags & IFAPI_SESSION_GENEK)) {
+         context->srk_handle = ESYS_TR_NONE;
+         context->session_state = SESSION_CREATE_SESSION;
+         return TSS2_RC_SUCCESS;
+-- 
+2.41.0
+
