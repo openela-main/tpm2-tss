@@ -1,0 +1,29 @@
+From 5ab8190843597ff6a255c59f91582e4dca117927 Mon Sep 17 00:00:00 2001
+From: Jonas Witschel <diabonas@gmx.de>
+Date: Thu, 21 Nov 2019 14:49:27 +0100
+Subject: [PATCH] sys: match counter variable type for cmdAuthsArray->count
+
+TSS2L_SYS_AUTH_COMMAND.count is defined as uint16_t, so the counter
+variable should be uint16_t as well.
+
+Signed-off-by: Jonas Witschel <diabonas@gmx.de>
+---
+ src/tss2-sys/api/Tss2_Sys_SetCmdAuths.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/tss2-sys/api/Tss2_Sys_SetCmdAuths.c b/src/tss2-sys/api/Tss2_Sys_SetCmdAuths.c
+index 1bc3f3c2556f..d946c14e5cfb 100644
+--- a/src/tss2-sys/api/Tss2_Sys_SetCmdAuths.c
++++ b/src/tss2-sys/api/Tss2_Sys_SetCmdAuths.c
+@@ -20,7 +20,7 @@ TSS2_RC Tss2_Sys_SetCmdAuths(
+     const TSS2L_SYS_AUTH_COMMAND *cmdAuthsArray)
+ {
+     _TSS2_SYS_CONTEXT_BLOB *ctx = syscontext_cast(sysContext);
+-    uint8_t i;
++    uint16_t i;
+     UINT32 authSize = 0;
+     UINT32 newCmdSize = 0;
+     size_t authOffset;
+-- 
+2.27.0
+

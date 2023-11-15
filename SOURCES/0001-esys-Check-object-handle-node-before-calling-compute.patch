@@ -1,0 +1,1314 @@
+From f9a2e69bbc0e5f11ec2fe351ed8e610853857aba Mon Sep 17 00:00:00 2001
+From: Tadeusz Struk <tadeusz.struk@intel.com>
+Date: Thu, 9 Jan 2020 14:16:50 -0800
+Subject: [PATCH] esys: Check object handle node before calling
+ compute_session_value()
+
+Fixes: #1593
+Signed-off-by: Tadeusz Struk <tadeusz.struk@intel.com>
+---
+ src/tss2-esys/api/Esys_ActivateCredential.c       | 15 +++++++++++----
+ src/tss2-esys/api/Esys_Certify.c                  | 12 ++++++++++--
+ src/tss2-esys/api/Esys_CertifyCreation.c          |  8 ++++++--
+ src/tss2-esys/api/Esys_ChangeEPS.c                |  8 ++++++--
+ src/tss2-esys/api/Esys_ChangePPS.c                |  6 +++++-
+ src/tss2-esys/api/Esys_Clear.c                    |  6 +++++-
+ src/tss2-esys/api/Esys_ClearControl.c             |  6 +++++-
+ src/tss2-esys/api/Esys_ClockRateAdjust.c          |  8 ++++++--
+ src/tss2-esys/api/Esys_ClockSet.c                 |  6 +++++-
+ src/tss2-esys/api/Esys_Commit.c                   |  6 +++++-
+ src/tss2-esys/api/Esys_Create.c                   |  7 ++++++-
+ src/tss2-esys/api/Esys_CreateLoaded.c             |  6 +++++-
+ src/tss2-esys/api/Esys_CreatePrimary.c            |  6 +++++-
+ .../api/Esys_DictionaryAttackLockReset.c          |  6 +++++-
+ .../api/Esys_DictionaryAttackParameters.c         |  6 +++++-
+ src/tss2-esys/api/Esys_Duplicate.c                |  6 +++++-
+ src/tss2-esys/api/Esys_ECDH_ZGen.c                |  6 +++++-
+ src/tss2-esys/api/Esys_EncryptDecrypt.c           |  6 +++++-
+ src/tss2-esys/api/Esys_EncryptDecrypt2.c          |  6 +++++-
+ src/tss2-esys/api/Esys_EventSequenceComplete.c    | 15 +++++++++++----
+ src/tss2-esys/api/Esys_EvictControl.c             |  6 +++++-
+ src/tss2-esys/api/Esys_FieldUpgradeStart.c        |  6 +++++-
+ src/tss2-esys/api/Esys_GetCommandAuditDigest.c    |  6 +++++-
+ src/tss2-esys/api/Esys_GetSessionAuditDigest.c    |  6 +++++-
+ src/tss2-esys/api/Esys_GetTime.c                  |  6 +++++-
+ src/tss2-esys/api/Esys_HMAC.c                     |  6 +++++-
+ src/tss2-esys/api/Esys_HMAC_Start.c               |  6 +++++-
+ src/tss2-esys/api/Esys_HierarchyChangeAuth.c      |  6 +++++-
+ src/tss2-esys/api/Esys_HierarchyControl.c         |  6 +++++-
+ src/tss2-esys/api/Esys_Import.c                   |  6 +++++-
+ src/tss2-esys/api/Esys_Load.c                     |  6 +++++-
+ src/tss2-esys/api/Esys_NV_Certify.c               | 12 ++++++++++--
+ src/tss2-esys/api/Esys_NV_ChangeAuth.c            |  6 +++++-
+ src/tss2-esys/api/Esys_NV_DefineSpace.c           |  6 +++++-
+ src/tss2-esys/api/Esys_NV_Extend.c                |  6 +++++-
+ src/tss2-esys/api/Esys_NV_GlobalWriteLock.c       |  6 +++++-
+ src/tss2-esys/api/Esys_NV_Increment.c             |  6 +++++-
+ src/tss2-esys/api/Esys_NV_Read.c                  |  6 +++++-
+ src/tss2-esys/api/Esys_NV_ReadLock.c              |  6 +++++-
+ src/tss2-esys/api/Esys_NV_SetBits.c               |  6 +++++-
+ src/tss2-esys/api/Esys_NV_UndefineSpace.c         |  6 +++++-
+ src/tss2-esys/api/Esys_NV_UndefineSpaceSpecial.c  | 12 ++++++++++--
+ src/tss2-esys/api/Esys_NV_Write.c                 |  6 +++++-
+ src/tss2-esys/api/Esys_NV_WriteLock.c             |  6 +++++-
+ src/tss2-esys/api/Esys_ObjectChangeAuth.c         |  6 +++++-
+ src/tss2-esys/api/Esys_PCR_Allocate.c             |  6 +++++-
+ src/tss2-esys/api/Esys_PCR_Event.c                |  6 +++++-
+ src/tss2-esys/api/Esys_PCR_Extend.c               |  6 +++++-
+ src/tss2-esys/api/Esys_PCR_Reset.c                |  6 +++++-
+ src/tss2-esys/api/Esys_PCR_SetAuthPolicy.c        |  6 +++++-
+ src/tss2-esys/api/Esys_PCR_SetAuthValue.c         |  6 +++++-
+ src/tss2-esys/api/Esys_PP_Commands.c              |  6 +++++-
+ src/tss2-esys/api/Esys_PolicyAuthorizeNV.c        |  6 +++++-
+ src/tss2-esys/api/Esys_PolicyNV.c                 |  6 +++++-
+ src/tss2-esys/api/Esys_PolicySecret.c             |  6 +++++-
+ src/tss2-esys/api/Esys_Quote.c                    |  6 +++++-
+ src/tss2-esys/api/Esys_RSA_Decrypt.c              |  6 +++++-
+ src/tss2-esys/api/Esys_Rewrap.c                   |  6 +++++-
+ src/tss2-esys/api/Esys_SequenceComplete.c         |  9 ++++++---
+ src/tss2-esys/api/Esys_SequenceUpdate.c           |  9 ++++++---
+ src/tss2-esys/api/Esys_SetAlgorithmSet.c          |  6 +++++-
+ .../api/Esys_SetCommandCodeAuditStatus.c          |  6 +++++-
+ src/tss2-esys/api/Esys_SetPrimaryPolicy.c         |  6 +++++-
+ src/tss2-esys/api/Esys_Sign.c                     |  6 +++++-
+ src/tss2-esys/api/Esys_Unseal.c                   |  6 +++++-
+ src/tss2-esys/api/Esys_ZGen_2Phase.c              |  6 +++++-
+ 66 files changed, 363 insertions(+), 82 deletions(-)
+
+diff --git a/src/tss2-esys/api/Esys_ActivateCredential.c b/src/tss2-esys/api/Esys_ActivateCredential.c
+index 3d332521528e..9377ad2a0627 100644
+--- a/src/tss2-esys/api/Esys_ActivateCredential.c
++++ b/src/tss2-esys/api/Esys_ActivateCredential.c
+@@ -194,10 +194,17 @@ Esys_ActivateCredential_Async(
+     /* Calculate the cpHash Values */
+     r = init_session_tab(esysContext, shandle1, shandle2, shandle3);
+     return_state_if_error(r, _ESYS_STATE_INIT, "Initialize session resources");
+-    iesys_compute_session_value(esysContext->session_tab[0],
+-                &activateHandleNode->rsrc.name, &activateHandleNode->auth);
+-    iesys_compute_session_value(esysContext->session_tab[1],
+-                &keyHandleNode->rsrc.name, &keyHandleNode->auth);
++    if (activateHandleNode != NULL)
++        iesys_compute_session_value(esysContext->session_tab[0],
++                    &activateHandleNode->rsrc.name, &activateHandleNode->auth);
++    else
++        iesys_compute_session_value(esysContext->session_tab[0], NULL, NULL);
++
++    if (keyHandleNode != NULL)
++        iesys_compute_session_value(esysContext->session_tab[1],
++                    &keyHandleNode->rsrc.name, &keyHandleNode->auth);
++    else
++        iesys_compute_session_value(esysContext->session_tab[1], NULL, NULL);
+     iesys_compute_session_value(esysContext->session_tab[2], NULL, NULL);
+ 
+     /* Generate the auth values and set them in the SAPI command buffer */
+diff --git a/src/tss2-esys/api/Esys_Certify.c b/src/tss2-esys/api/Esys_Certify.c
+index d34d70b88ff7..96c627606684 100644
+--- a/src/tss2-esys/api/Esys_Certify.c
++++ b/src/tss2-esys/api/Esys_Certify.c
+@@ -193,10 +193,18 @@ Esys_Certify_Async(
+     /* Calculate the cpHash Values */
+     r = init_session_tab(esysContext, shandle1, shandle2, shandle3);
+     return_state_if_error(r, _ESYS_STATE_INIT, "Initialize session resources");
+-    iesys_compute_session_value(esysContext->session_tab[0],
++    if (objectHandleNode != NULL)
++        iesys_compute_session_value(esysContext->session_tab[0],
+                 &objectHandleNode->rsrc.name, &objectHandleNode->auth);
+-    iesys_compute_session_value(esysContext->session_tab[1],
++    else
++        iesys_compute_session_value(esysContext->session_tab[0], NULL, NULL);
++
++    if (signHandleNode != NULL)
++        iesys_compute_session_value(esysContext->session_tab[1],
+                 &signHandleNode->rsrc.name, &signHandleNode->auth);
++    else
++        iesys_compute_session_value(esysContext->session_tab[1], NULL, NULL);
++
+     iesys_compute_session_value(esysContext->session_tab[2], NULL, NULL);
+ 
+     /* Generate the auth values and set them in the SAPI command buffer */
+diff --git a/src/tss2-esys/api/Esys_CertifyCreation.c b/src/tss2-esys/api/Esys_CertifyCreation.c
+index 04c07a9bf33c..3135a49f77ca 100644
+--- a/src/tss2-esys/api/Esys_CertifyCreation.c
++++ b/src/tss2-esys/api/Esys_CertifyCreation.c
+@@ -209,8 +209,12 @@ Esys_CertifyCreation_Async(
+     /* Calculate the cpHash Values */
+     r = init_session_tab(esysContext, shandle1, shandle2, shandle3);
+     return_state_if_error(r, _ESYS_STATE_INIT, "Initialize session resources");
+-    iesys_compute_session_value(esysContext->session_tab[0],
+-                &signHandleNode->rsrc.name, &signHandleNode->auth);
++    if (signHandleNode != NULL)
++        iesys_compute_session_value(esysContext->session_tab[0],
++                    &signHandleNode->rsrc.name, &signHandleNode->auth);
++    else
++        iesys_compute_session_value(esysContext->session_tab[0], NULL, NULL);
++
+     iesys_compute_session_value(esysContext->session_tab[1], NULL, NULL);
+     iesys_compute_session_value(esysContext->session_tab[2], NULL, NULL);
+ 
+diff --git a/src/tss2-esys/api/Esys_ChangeEPS.c b/src/tss2-esys/api/Esys_ChangeEPS.c
+index 954c442547f3..d76a613d417e 100644
+--- a/src/tss2-esys/api/Esys_ChangeEPS.c
++++ b/src/tss2-esys/api/Esys_ChangeEPS.c
+@@ -175,8 +175,12 @@ Esys_ChangeEPS_Async(
+     /* Calculate the cpHash Values */
+     r = init_session_tab(esysContext, shandle1, shandle2, shandle3);
+     return_state_if_error(r, _ESYS_STATE_INIT, "Initialize session resources");
+-    iesys_compute_session_value(esysContext->session_tab[0],
+-                &authHandleNode->rsrc.name, &authHandleNode->auth);
++    if (authHandleNode != NULL)
++        iesys_compute_session_value(esysContext->session_tab[0],
++                    &authHandleNode->rsrc.name, &authHandleNode->auth);
++    else
++        iesys_compute_session_value(esysContext->session_tab[0], NULL, NULL);
++
+     iesys_compute_session_value(esysContext->session_tab[1], NULL, NULL);
+     iesys_compute_session_value(esysContext->session_tab[2], NULL, NULL);
+ 
+diff --git a/src/tss2-esys/api/Esys_ChangePPS.c b/src/tss2-esys/api/Esys_ChangePPS.c
+index c182533cebc5..ea0f9746c247 100644
+--- a/src/tss2-esys/api/Esys_ChangePPS.c
++++ b/src/tss2-esys/api/Esys_ChangePPS.c
+@@ -175,8 +175,12 @@ Esys_ChangePPS_Async(
+     /* Calculate the cpHash Values */
+     r = init_session_tab(esysContext, shandle1, shandle2, shandle3);
+     return_state_if_error(r, _ESYS_STATE_INIT, "Initialize session resources");
+-    iesys_compute_session_value(esysContext->session_tab[0],
++    if (authHandleNode != NULL)
++        iesys_compute_session_value(esysContext->session_tab[0],
+                 &authHandleNode->rsrc.name, &authHandleNode->auth);
++    else
++        iesys_compute_session_value(esysContext->session_tab[0], NULL, NULL);
++
+     iesys_compute_session_value(esysContext->session_tab[1], NULL, NULL);
+     iesys_compute_session_value(esysContext->session_tab[2], NULL, NULL);
+ 
+diff --git a/src/tss2-esys/api/Esys_Clear.c b/src/tss2-esys/api/Esys_Clear.c
+index 96ffb470309f..f5c0b827425a 100644
+--- a/src/tss2-esys/api/Esys_Clear.c
++++ b/src/tss2-esys/api/Esys_Clear.c
+@@ -174,8 +174,12 @@ Esys_Clear_Async(
+     /* Calculate the cpHash Values */
+     r = init_session_tab(esysContext, shandle1, shandle2, shandle3);
+     return_state_if_error(r, _ESYS_STATE_INIT, "Initialize session resources");
+-    iesys_compute_session_value(esysContext->session_tab[0],
++    if (authHandleNode != NULL)
++        iesys_compute_session_value(esysContext->session_tab[0],
+                 &authHandleNode->rsrc.name, &authHandleNode->auth);
++    else
++        iesys_compute_session_value(esysContext->session_tab[0], NULL, NULL);
++
+     iesys_compute_session_value(esysContext->session_tab[1], NULL, NULL);
+     iesys_compute_session_value(esysContext->session_tab[2], NULL, NULL);
+ 
+diff --git a/src/tss2-esys/api/Esys_ClearControl.c b/src/tss2-esys/api/Esys_ClearControl.c
+index a9fcd1b5e2e9..a4d8b4d0bab6 100644
+--- a/src/tss2-esys/api/Esys_ClearControl.c
++++ b/src/tss2-esys/api/Esys_ClearControl.c
+@@ -181,8 +181,12 @@ Esys_ClearControl_Async(
+     /* Calculate the cpHash Values */
+     r = init_session_tab(esysContext, shandle1, shandle2, shandle3);
+     return_state_if_error(r, _ESYS_STATE_INIT, "Initialize session resources");
+-    iesys_compute_session_value(esysContext->session_tab[0],
++    if (authNode != NULL)
++        iesys_compute_session_value(esysContext->session_tab[0],
+                 &authNode->rsrc.name, &authNode->auth);
++    else
++        iesys_compute_session_value(esysContext->session_tab[0], NULL, NULL);
++
+     iesys_compute_session_value(esysContext->session_tab[1], NULL, NULL);
+     iesys_compute_session_value(esysContext->session_tab[2], NULL, NULL);
+ 
+diff --git a/src/tss2-esys/api/Esys_ClockRateAdjust.c b/src/tss2-esys/api/Esys_ClockRateAdjust.c
+index cb25c8502d23..931645c95296 100644
+--- a/src/tss2-esys/api/Esys_ClockRateAdjust.c
++++ b/src/tss2-esys/api/Esys_ClockRateAdjust.c
+@@ -179,8 +179,12 @@ Esys_ClockRateAdjust_Async(
+     /* Calculate the cpHash Values */
+     r = init_session_tab(esysContext, shandle1, shandle2, shandle3);
+     return_state_if_error(r, _ESYS_STATE_INIT, "Initialize session resources");
+-    iesys_compute_session_value(esysContext->session_tab[0],
+-                &authNode->rsrc.name, &authNode->auth);
++    if (authNode != NULL)
++        iesys_compute_session_value(esysContext->session_tab[0],
++                    &authNode->rsrc.name, &authNode->auth);
++    else
++        iesys_compute_session_value(esysContext->session_tab[0], NULL, NULL);
++
+     iesys_compute_session_value(esysContext->session_tab[1], NULL, NULL);
+     iesys_compute_session_value(esysContext->session_tab[2], NULL, NULL);
+ 
+diff --git a/src/tss2-esys/api/Esys_ClockSet.c b/src/tss2-esys/api/Esys_ClockSet.c
+index 7191576aec6b..b38219e7cbf3 100644
+--- a/src/tss2-esys/api/Esys_ClockSet.c
++++ b/src/tss2-esys/api/Esys_ClockSet.c
+@@ -179,8 +179,12 @@ Esys_ClockSet_Async(
+     /* Calculate the cpHash Values */
+     r = init_session_tab(esysContext, shandle1, shandle2, shandle3);
+     return_state_if_error(r, _ESYS_STATE_INIT, "Initialize session resources");
+-    iesys_compute_session_value(esysContext->session_tab[0],
++    if (authNode != NULL)
++        iesys_compute_session_value(esysContext->session_tab[0],
+                 &authNode->rsrc.name, &authNode->auth);
++    else
++        iesys_compute_session_value(esysContext->session_tab[0], NULL, NULL);
++
+     iesys_compute_session_value(esysContext->session_tab[1], NULL, NULL);
+     iesys_compute_session_value(esysContext->session_tab[2], NULL, NULL);
+ 
+diff --git a/src/tss2-esys/api/Esys_Commit.c b/src/tss2-esys/api/Esys_Commit.c
+index 52298e4c7c6c..8992c20ca419 100644
+--- a/src/tss2-esys/api/Esys_Commit.c
++++ b/src/tss2-esys/api/Esys_Commit.c
+@@ -190,8 +190,12 @@ Esys_Commit_Async(
+     /* Calculate the cpHash Values */
+     r = init_session_tab(esysContext, shandle1, shandle2, shandle3);
+     return_state_if_error(r, _ESYS_STATE_INIT, "Initialize session resources");
+-    iesys_compute_session_value(esysContext->session_tab[0],
++    if (signHandleNode != NULL)
++        iesys_compute_session_value(esysContext->session_tab[0],
+                 &signHandleNode->rsrc.name, &signHandleNode->auth);
++    else
++        iesys_compute_session_value(esysContext->session_tab[0], NULL, NULL);
++
+     iesys_compute_session_value(esysContext->session_tab[1], NULL, NULL);
+     iesys_compute_session_value(esysContext->session_tab[2], NULL, NULL);
+ 
+diff --git a/src/tss2-esys/api/Esys_Create.c b/src/tss2-esys/api/Esys_Create.c
+index c7e59f7ed5ff..c21ed7bc7d42 100644
+--- a/src/tss2-esys/api/Esys_Create.c
++++ b/src/tss2-esys/api/Esys_Create.c
+@@ -204,8 +204,13 @@ Esys_Create_Async(
+     /* Calculate the cpHash Values */
+     r = init_session_tab(esysContext, shandle1, shandle2, shandle3);
+     return_state_if_error(r, _ESYS_STATE_INIT, "Initialize session resources");
+-    iesys_compute_session_value(esysContext->session_tab[0],
++
++    if (parentHandleNode != NULL)
++        iesys_compute_session_value(esysContext->session_tab[0],
+                 &parentHandleNode->rsrc.name, &parentHandleNode->auth);
++    else
++        iesys_compute_session_value(esysContext->session_tab[0], NULL, NULL);
++
+     iesys_compute_session_value(esysContext->session_tab[1], NULL, NULL);
+     iesys_compute_session_value(esysContext->session_tab[2], NULL, NULL);
+ 
+diff --git a/src/tss2-esys/api/Esys_CreateLoaded.c b/src/tss2-esys/api/Esys_CreateLoaded.c
+index a92649cade27..7b366045e5eb 100644
+--- a/src/tss2-esys/api/Esys_CreateLoaded.c
++++ b/src/tss2-esys/api/Esys_CreateLoaded.c
+@@ -210,8 +210,12 @@ Esys_CreateLoaded_Async(
+     /* Calculate the cpHash Values */
+     r = init_session_tab(esysContext, shandle1, shandle2, shandle3);
+     return_state_if_error(r, _ESYS_STATE_INIT, "Initialize session resources");
+-    iesys_compute_session_value(esysContext->session_tab[0],
++    if (parentHandleNode != NULL)
++        iesys_compute_session_value(esysContext->session_tab[0],
+                 &parentHandleNode->rsrc.name, &parentHandleNode->auth);
++    else
++        iesys_compute_session_value(esysContext->session_tab[0], NULL, NULL);
++
+     iesys_compute_session_value(esysContext->session_tab[1], NULL, NULL);
+     iesys_compute_session_value(esysContext->session_tab[2], NULL, NULL);
+ 
+diff --git a/src/tss2-esys/api/Esys_CreatePrimary.c b/src/tss2-esys/api/Esys_CreatePrimary.c
+index 9eb19042e7bb..a9b9e8f2dfe6 100644
+--- a/src/tss2-esys/api/Esys_CreatePrimary.c
++++ b/src/tss2-esys/api/Esys_CreatePrimary.c
+@@ -223,8 +223,12 @@ Esys_CreatePrimary_Async(
+     /* Calculate the cpHash Values */
+     r = init_session_tab(esysContext, shandle1, shandle2, shandle3);
+     return_state_if_error(r, _ESYS_STATE_INIT, "Initialize session resources");
+-    iesys_compute_session_value(esysContext->session_tab[0],
++    if (primaryHandleNode != NULL)
++        iesys_compute_session_value(esysContext->session_tab[0],
+                 &primaryHandleNode->rsrc.name, &primaryHandleNode->auth);
++    else
++        iesys_compute_session_value(esysContext->session_tab[0], NULL, NULL);
++
+     iesys_compute_session_value(esysContext->session_tab[1], NULL, NULL);
+     iesys_compute_session_value(esysContext->session_tab[2], NULL, NULL);
+ 
+diff --git a/src/tss2-esys/api/Esys_DictionaryAttackLockReset.c b/src/tss2-esys/api/Esys_DictionaryAttackLockReset.c
+index 1e8207fe7cfc..bada24bd3dbd 100644
+--- a/src/tss2-esys/api/Esys_DictionaryAttackLockReset.c
++++ b/src/tss2-esys/api/Esys_DictionaryAttackLockReset.c
+@@ -176,8 +176,12 @@ Esys_DictionaryAttackLockReset_Async(
+     /* Calculate the cpHash Values */
+     r = init_session_tab(esysContext, shandle1, shandle2, shandle3);
+     return_state_if_error(r, _ESYS_STATE_INIT, "Initialize session resources");
+-    iesys_compute_session_value(esysContext->session_tab[0],
++    if (lockHandleNode != NULL)
++        iesys_compute_session_value(esysContext->session_tab[0],
+                 &lockHandleNode->rsrc.name, &lockHandleNode->auth);
++    else
++        iesys_compute_session_value(esysContext->session_tab[0], NULL, NULL);
++
+     iesys_compute_session_value(esysContext->session_tab[1], NULL, NULL);
+     iesys_compute_session_value(esysContext->session_tab[2], NULL, NULL);
+ 
+diff --git a/src/tss2-esys/api/Esys_DictionaryAttackParameters.c b/src/tss2-esys/api/Esys_DictionaryAttackParameters.c
+index f10aa2f06b46..a61a5b4d4f26 100644
+--- a/src/tss2-esys/api/Esys_DictionaryAttackParameters.c
++++ b/src/tss2-esys/api/Esys_DictionaryAttackParameters.c
+@@ -198,8 +198,12 @@ Esys_DictionaryAttackParameters_Async(
+     /* Calculate the cpHash Values */
+     r = init_session_tab(esysContext, shandle1, shandle2, shandle3);
+     return_state_if_error(r, _ESYS_STATE_INIT, "Initialize session resources");
+-    iesys_compute_session_value(esysContext->session_tab[0],
++    if (lockHandleNode != NULL)
++        iesys_compute_session_value(esysContext->session_tab[0],
+                 &lockHandleNode->rsrc.name, &lockHandleNode->auth);
++    else
++        iesys_compute_session_value(esysContext->session_tab[0], NULL, NULL);
++
+     iesys_compute_session_value(esysContext->session_tab[1], NULL, NULL);
+     iesys_compute_session_value(esysContext->session_tab[2], NULL, NULL);
+ 
+diff --git a/src/tss2-esys/api/Esys_Duplicate.c b/src/tss2-esys/api/Esys_Duplicate.c
+index d0e5799897e2..c587fd740af7 100644
+--- a/src/tss2-esys/api/Esys_Duplicate.c
++++ b/src/tss2-esys/api/Esys_Duplicate.c
+@@ -202,8 +202,12 @@ Esys_Duplicate_Async(
+     /* Calculate the cpHash Values */
+     r = init_session_tab(esysContext, shandle1, shandle2, shandle3);
+     return_state_if_error(r, _ESYS_STATE_INIT, "Initialize session resources");
+-    iesys_compute_session_value(esysContext->session_tab[0],
++    if (objectHandleNode != NULL)
++        iesys_compute_session_value(esysContext->session_tab[0],
+                 &objectHandleNode->rsrc.name, &objectHandleNode->auth);
++    else
++        iesys_compute_session_value(esysContext->session_tab[0], NULL, NULL);
++
+     iesys_compute_session_value(esysContext->session_tab[1], NULL, NULL);
+     iesys_compute_session_value(esysContext->session_tab[2], NULL, NULL);
+ 
+diff --git a/src/tss2-esys/api/Esys_ECDH_ZGen.c b/src/tss2-esys/api/Esys_ECDH_ZGen.c
+index 24e487363f0f..dad825960e62 100644
+--- a/src/tss2-esys/api/Esys_ECDH_ZGen.c
++++ b/src/tss2-esys/api/Esys_ECDH_ZGen.c
+@@ -171,8 +171,12 @@ Esys_ECDH_ZGen_Async(
+     /* Calculate the cpHash Values */
+     r = init_session_tab(esysContext, shandle1, shandle2, shandle3);
+     return_state_if_error(r, _ESYS_STATE_INIT, "Initialize session resources");
+-    iesys_compute_session_value(esysContext->session_tab[0],
++    if (keyHandleNode != NULL)
++        iesys_compute_session_value(esysContext->session_tab[0],
+                 &keyHandleNode->rsrc.name, &keyHandleNode->auth);
++    else
++        iesys_compute_session_value(esysContext->session_tab[0], NULL, NULL);
++
+     iesys_compute_session_value(esysContext->session_tab[1], NULL, NULL);
+     iesys_compute_session_value(esysContext->session_tab[2], NULL, NULL);
+ 
+diff --git a/src/tss2-esys/api/Esys_EncryptDecrypt.c b/src/tss2-esys/api/Esys_EncryptDecrypt.c
+index 506f22e68317..e3b6cc64f58a 100644
+--- a/src/tss2-esys/api/Esys_EncryptDecrypt.c
++++ b/src/tss2-esys/api/Esys_EncryptDecrypt.c
+@@ -196,8 +196,12 @@ Esys_EncryptDecrypt_Async(
+     /* Calculate the cpHash Values */
+     r = init_session_tab(esysContext, shandle1, shandle2, shandle3);
+     return_state_if_error(r, _ESYS_STATE_INIT, "Initialize session resources");
+-    iesys_compute_session_value(esysContext->session_tab[0],
++    if (keyHandleNode != NULL)
++        iesys_compute_session_value(esysContext->session_tab[0],
+                 &keyHandleNode->rsrc.name, &keyHandleNode->auth);
++    else
++        iesys_compute_session_value(esysContext->session_tab[0], NULL, NULL);
++
+     iesys_compute_session_value(esysContext->session_tab[1], NULL, NULL);
+     iesys_compute_session_value(esysContext->session_tab[2], NULL, NULL);
+ 
+diff --git a/src/tss2-esys/api/Esys_EncryptDecrypt2.c b/src/tss2-esys/api/Esys_EncryptDecrypt2.c
+index a6fa4b1f2185..bdbae8392f57 100644
+--- a/src/tss2-esys/api/Esys_EncryptDecrypt2.c
++++ b/src/tss2-esys/api/Esys_EncryptDecrypt2.c
+@@ -190,8 +190,12 @@ Esys_EncryptDecrypt2_Async(
+     /* Calculate the cpHash Values */
+     r = init_session_tab(esysContext, shandle1, shandle2, shandle3);
+     return_state_if_error(r, _ESYS_STATE_INIT, "Initialize session resources");
+-    iesys_compute_session_value(esysContext->session_tab[0],
++    if (keyHandleNode != NULL)
++        iesys_compute_session_value(esysContext->session_tab[0],
+                 &keyHandleNode->rsrc.name, &keyHandleNode->auth);
++    else
++        iesys_compute_session_value(esysContext->session_tab[0], NULL, NULL);
++
+     iesys_compute_session_value(esysContext->session_tab[1], NULL, NULL);
+     iesys_compute_session_value(esysContext->session_tab[2], NULL, NULL);
+ 
+diff --git a/src/tss2-esys/api/Esys_EventSequenceComplete.c b/src/tss2-esys/api/Esys_EventSequenceComplete.c
+index c318a67a4369..6ee7904a358d 100644
+--- a/src/tss2-esys/api/Esys_EventSequenceComplete.c
++++ b/src/tss2-esys/api/Esys_EventSequenceComplete.c
+@@ -189,11 +189,18 @@ Esys_EventSequenceComplete_Async(
+     /* Calculate the cpHash Values */
+     r = init_session_tab(esysContext, shandle1, shandle2, shandle3);
+     return_state_if_error(r, _ESYS_STATE_INIT, "Initialize session resources");
+-    iesys_compute_session_value(esysContext->session_tab[0],
++    if (pcrHandleNode != NULL)
++        iesys_compute_session_value(esysContext->session_tab[0],
+                 &pcrHandleNode->rsrc.name, &pcrHandleNode->auth);
+-    iesys_compute_session_value(esysContext->session_tab[1],
+-                sequenceHandleNode ? &sequenceHandleNode->rsrc.name : NULL,
+-                sequenceHandleNode ? &sequenceHandleNode->auth : NULL);
++    else
++        iesys_compute_session_value(esysContext->session_tab[0], NULL, NULL);
++
++    if (sequenceHandleNode != NULL)
++        iesys_compute_session_value(esysContext->session_tab[1],
++                &sequenceHandleNode->rsrc.name, &sequenceHandleNode->auth);
++    else
++        iesys_compute_session_value(esysContext->session_tab[1], NULL, NULL);
++
+     iesys_compute_session_value(esysContext->session_tab[2], NULL, NULL);
+ 
+     /* Generate the auth values and set them in the SAPI command buffer */
+diff --git a/src/tss2-esys/api/Esys_EvictControl.c b/src/tss2-esys/api/Esys_EvictControl.c
+index fe7aaaccf888..faade51c7060 100644
+--- a/src/tss2-esys/api/Esys_EvictControl.c
++++ b/src/tss2-esys/api/Esys_EvictControl.c
+@@ -209,8 +209,12 @@ Esys_EvictControl_Async(
+     /* Calculate the cpHash Values */
+     r = init_session_tab(esysContext, shandle1, shandle2, shandle3);
+     return_state_if_error(r, _ESYS_STATE_INIT, "Initialize session resources");
+-    iesys_compute_session_value(esysContext->session_tab[0],
++    if (authNode != NULL)
++        iesys_compute_session_value(esysContext->session_tab[0],
+                 &authNode->rsrc.name, &authNode->auth);
++    else
++        iesys_compute_session_value(esysContext->session_tab[0], NULL, NULL);
++
+     iesys_compute_session_value(esysContext->session_tab[1], NULL, NULL);
+     iesys_compute_session_value(esysContext->session_tab[2], NULL, NULL);
+ 
+diff --git a/src/tss2-esys/api/Esys_FieldUpgradeStart.c b/src/tss2-esys/api/Esys_FieldUpgradeStart.c
+index 27f963accf40..2e1a07e29700 100644
+--- a/src/tss2-esys/api/Esys_FieldUpgradeStart.c
++++ b/src/tss2-esys/api/Esys_FieldUpgradeStart.c
+@@ -196,8 +196,12 @@ Esys_FieldUpgradeStart_Async(
+     /* Calculate the cpHash Values */
+     r = init_session_tab(esysContext, shandle1, shandle2, shandle3);
+     return_state_if_error(r, _ESYS_STATE_INIT, "Initialize session resources");
+-    iesys_compute_session_value(esysContext->session_tab[0],
++    if (authorizationNode != NULL)
++        iesys_compute_session_value(esysContext->session_tab[0],
+                 &authorizationNode->rsrc.name, &authorizationNode->auth);
++    else
++        iesys_compute_session_value(esysContext->session_tab[0], NULL, NULL);
++
+     iesys_compute_session_value(esysContext->session_tab[1], NULL, NULL);
+     iesys_compute_session_value(esysContext->session_tab[2], NULL, NULL);
+ 
+diff --git a/src/tss2-esys/api/Esys_GetCommandAuditDigest.c b/src/tss2-esys/api/Esys_GetCommandAuditDigest.c
+index 0c3b642b3c51..714b3706bf40 100644
+--- a/src/tss2-esys/api/Esys_GetCommandAuditDigest.c
++++ b/src/tss2-esys/api/Esys_GetCommandAuditDigest.c
+@@ -196,8 +196,12 @@ Esys_GetCommandAuditDigest_Async(
+     /* Calculate the cpHash Values */
+     r = init_session_tab(esysContext, shandle1, shandle2, shandle3);
+     return_state_if_error(r, _ESYS_STATE_INIT, "Initialize session resources");
+-    iesys_compute_session_value(esysContext->session_tab[0],
++    if (privacyHandleNode != NULL)
++        iesys_compute_session_value(esysContext->session_tab[0],
+                 &privacyHandleNode->rsrc.name, &privacyHandleNode->auth);
++    else
++        iesys_compute_session_value(esysContext->session_tab[0], NULL, NULL);
++
+     iesys_compute_session_value(esysContext->session_tab[1],
+                 &signHandleNode->rsrc.name, &signHandleNode->auth);
+     iesys_compute_session_value(esysContext->session_tab[2], NULL, NULL);
+diff --git a/src/tss2-esys/api/Esys_GetSessionAuditDigest.c b/src/tss2-esys/api/Esys_GetSessionAuditDigest.c
+index 9d7ef314a637..38a62787d892 100644
+--- a/src/tss2-esys/api/Esys_GetSessionAuditDigest.c
++++ b/src/tss2-esys/api/Esys_GetSessionAuditDigest.c
+@@ -210,8 +210,12 @@ Esys_GetSessionAuditDigest_Async(
+     /* Calculate the cpHash Values */
+     r = init_session_tab(esysContext, shandle1, shandle2, shandle3);
+     return_state_if_error(r, _ESYS_STATE_INIT, "Initialize session resources");
+-    iesys_compute_session_value(esysContext->session_tab[0],
++    if (privacyAdminHandleNode != NULL)
++        iesys_compute_session_value(esysContext->session_tab[0],
+                 &privacyAdminHandleNode->rsrc.name, &privacyAdminHandleNode->auth);
++    else
++        iesys_compute_session_value(esysContext->session_tab[0], NULL, NULL);
++
+     iesys_compute_session_value(esysContext->session_tab[1],
+                 &signHandleNode->rsrc.name, &signHandleNode->auth);
+     iesys_compute_session_value(esysContext->session_tab[2], NULL, NULL);
+diff --git a/src/tss2-esys/api/Esys_GetTime.c b/src/tss2-esys/api/Esys_GetTime.c
+index 2142b8ec47df..6948dcbdcba6 100644
+--- a/src/tss2-esys/api/Esys_GetTime.c
++++ b/src/tss2-esys/api/Esys_GetTime.c
+@@ -194,8 +194,12 @@ Esys_GetTime_Async(
+     /* Calculate the cpHash Values */
+     r = init_session_tab(esysContext, shandle1, shandle2, shandle3);
+     return_state_if_error(r, _ESYS_STATE_INIT, "Initialize session resources");
+-    iesys_compute_session_value(esysContext->session_tab[0],
++    if (privacyAdminHandleNode != NULL)
++        iesys_compute_session_value(esysContext->session_tab[0],
+                 &privacyAdminHandleNode->rsrc.name, &privacyAdminHandleNode->auth);
++    else
++        iesys_compute_session_value(esysContext->session_tab[0], NULL, NULL);
++
+     iesys_compute_session_value(esysContext->session_tab[1],
+                 &signHandleNode->rsrc.name, &signHandleNode->auth);
+     iesys_compute_session_value(esysContext->session_tab[2], NULL, NULL);
+diff --git a/src/tss2-esys/api/Esys_HMAC.c b/src/tss2-esys/api/Esys_HMAC.c
+index 0d92f1c0c363..0e57c647d959 100644
+--- a/src/tss2-esys/api/Esys_HMAC.c
++++ b/src/tss2-esys/api/Esys_HMAC.c
+@@ -177,8 +177,12 @@ Esys_HMAC_Async(
+     /* Calculate the cpHash Values */
+     r = init_session_tab(esysContext, shandle1, shandle2, shandle3);
+     return_state_if_error(r, _ESYS_STATE_INIT, "Initialize session resources");
+-    iesys_compute_session_value(esysContext->session_tab[0],
++    if (handleNode != NULL)
++        iesys_compute_session_value(esysContext->session_tab[0],
+                 &handleNode->rsrc.name, &handleNode->auth);
++    else
++        iesys_compute_session_value(esysContext->session_tab[0], NULL, NULL);
++
+     iesys_compute_session_value(esysContext->session_tab[1], NULL, NULL);
+     iesys_compute_session_value(esysContext->session_tab[2], NULL, NULL);
+ 
+diff --git a/src/tss2-esys/api/Esys_HMAC_Start.c b/src/tss2-esys/api/Esys_HMAC_Start.c
+index afecbfbaf0a6..b129be39a4d2 100644
+--- a/src/tss2-esys/api/Esys_HMAC_Start.c
++++ b/src/tss2-esys/api/Esys_HMAC_Start.c
+@@ -194,8 +194,12 @@ Esys_HMAC_Start_Async(
+     /* Calculate the cpHash Values */
+     r = init_session_tab(esysContext, shandle1, shandle2, shandle3);
+     return_state_if_error(r, _ESYS_STATE_INIT, "Initialize session resources");
+-    iesys_compute_session_value(esysContext->session_tab[0],
++    if (handleNode != NULL)
++        iesys_compute_session_value(esysContext->session_tab[0],
+                 &handleNode->rsrc.name, &handleNode->auth);
++    else
++        iesys_compute_session_value(esysContext->session_tab[0], NULL, NULL);
++
+     iesys_compute_session_value(esysContext->session_tab[1], NULL, NULL);
+     iesys_compute_session_value(esysContext->session_tab[2], NULL, NULL);
+ 
+diff --git a/src/tss2-esys/api/Esys_HierarchyChangeAuth.c b/src/tss2-esys/api/Esys_HierarchyChangeAuth.c
+index 90d87bb5d76c..39672ed6823b 100644
+--- a/src/tss2-esys/api/Esys_HierarchyChangeAuth.c
++++ b/src/tss2-esys/api/Esys_HierarchyChangeAuth.c
+@@ -194,8 +194,12 @@ Esys_HierarchyChangeAuth_Async(
+     /* Calculate the cpHash Values */
+     r = init_session_tab(esysContext, shandle1, shandle2, shandle3);
+     return_state_if_error(r, _ESYS_STATE_INIT, "Initialize session resources");
+-    iesys_compute_session_value(esysContext->session_tab[0],
++    if (authHandleNode != NULL)
++        iesys_compute_session_value(esysContext->session_tab[0],
+                 &authHandleNode->rsrc.name, &authHandleNode->auth);
++    else
++        iesys_compute_session_value(esysContext->session_tab[0], NULL, NULL);
++
+     iesys_compute_session_value(esysContext->session_tab[1], NULL, NULL);
+     iesys_compute_session_value(esysContext->session_tab[2], NULL, NULL);
+ 
+diff --git a/src/tss2-esys/api/Esys_HierarchyControl.c b/src/tss2-esys/api/Esys_HierarchyControl.c
+index 16fd593a6484..55207f20e6d2 100644
+--- a/src/tss2-esys/api/Esys_HierarchyControl.c
++++ b/src/tss2-esys/api/Esys_HierarchyControl.c
+@@ -189,8 +189,12 @@ Esys_HierarchyControl_Async(
+     /* Calculate the cpHash Values */
+     r = init_session_tab(esysContext, shandle1, shandle2, shandle3);
+     return_state_if_error(r, _ESYS_STATE_INIT, "Initialize session resources");
+-    iesys_compute_session_value(esysContext->session_tab[0],
++    if (authHandleNode != NULL)
++        iesys_compute_session_value(esysContext->session_tab[0],
+                 &authHandleNode->rsrc.name, &authHandleNode->auth);
++    else
++        iesys_compute_session_value(esysContext->session_tab[0], NULL, NULL);
++
+     iesys_compute_session_value(esysContext->session_tab[1], NULL, NULL);
+     iesys_compute_session_value(esysContext->session_tab[2], NULL, NULL);
+ 
+diff --git a/src/tss2-esys/api/Esys_Import.c b/src/tss2-esys/api/Esys_Import.c
+index d7c36352b21f..8c24ed410c37 100644
+--- a/src/tss2-esys/api/Esys_Import.c
++++ b/src/tss2-esys/api/Esys_Import.c
+@@ -199,8 +199,12 @@ Esys_Import_Async(
+     /* Calculate the cpHash Values */
+     r = init_session_tab(esysContext, shandle1, shandle2, shandle3);
+     return_state_if_error(r, _ESYS_STATE_INIT, "Initialize session resources");
+-    iesys_compute_session_value(esysContext->session_tab[0],
++    if (parentHandleNode != NULL)
++        iesys_compute_session_value(esysContext->session_tab[0],
+                 &parentHandleNode->rsrc.name, &parentHandleNode->auth);
++    else
++        iesys_compute_session_value(esysContext->session_tab[0], NULL, NULL);
++
+     iesys_compute_session_value(esysContext->session_tab[1], NULL, NULL);
+     iesys_compute_session_value(esysContext->session_tab[2], NULL, NULL);
+ 
+diff --git a/src/tss2-esys/api/Esys_Load.c b/src/tss2-esys/api/Esys_Load.c
+index b695991924c8..410d9c8bcc73 100644
+--- a/src/tss2-esys/api/Esys_Load.c
++++ b/src/tss2-esys/api/Esys_Load.c
+@@ -191,8 +191,12 @@ Esys_Load_Async(
+     /* Calculate the cpHash Values */
+     r = init_session_tab(esysContext, shandle1, shandle2, shandle3);
+     return_state_if_error(r, _ESYS_STATE_INIT, "Initialize session resources");
+-    iesys_compute_session_value(esysContext->session_tab[0],
++    if (parentHandleNode != NULL)
++        iesys_compute_session_value(esysContext->session_tab[0],
+                 &parentHandleNode->rsrc.name, &parentHandleNode->auth);
++    else
++        iesys_compute_session_value(esysContext->session_tab[0], NULL, NULL);
++
+     iesys_compute_session_value(esysContext->session_tab[1], NULL, NULL);
+     iesys_compute_session_value(esysContext->session_tab[2], NULL, NULL);
+ 
+diff --git a/src/tss2-esys/api/Esys_NV_Certify.c b/src/tss2-esys/api/Esys_NV_Certify.c
+index 8f0eb6e65536..8b79fb69dae0 100644
+--- a/src/tss2-esys/api/Esys_NV_Certify.c
++++ b/src/tss2-esys/api/Esys_NV_Certify.c
+@@ -215,10 +215,18 @@ Esys_NV_Certify_Async(
+     /* Calculate the cpHash Values */
+     r = init_session_tab(esysContext, shandle1, shandle2, shandle3);
+     return_state_if_error(r, _ESYS_STATE_INIT, "Initialize session resources");
+-    iesys_compute_session_value(esysContext->session_tab[0],
++    if (signHandleNode != NULL)
++        iesys_compute_session_value(esysContext->session_tab[0],
+                 &signHandleNode->rsrc.name, &signHandleNode->auth);
+-    iesys_compute_session_value(esysContext->session_tab[1],
++    else
++        iesys_compute_session_value(esysContext->session_tab[0], NULL, NULL);
++
++    if (authHandleNode != NULL)
++        iesys_compute_session_value(esysContext->session_tab[1],
+                 &authHandleNode->rsrc.name, &authHandleNode->auth);
++    else
++        iesys_compute_session_value(esysContext->session_tab[1], NULL, NULL);
++
+     iesys_compute_session_value(esysContext->session_tab[2], NULL, NULL);
+ 
+     /* Generate the auth values and set them in the SAPI command buffer */
+diff --git a/src/tss2-esys/api/Esys_NV_ChangeAuth.c b/src/tss2-esys/api/Esys_NV_ChangeAuth.c
+index d2aced330113..3004a3dd4b1d 100644
+--- a/src/tss2-esys/api/Esys_NV_ChangeAuth.c
++++ b/src/tss2-esys/api/Esys_NV_ChangeAuth.c
+@@ -190,8 +190,12 @@ Esys_NV_ChangeAuth_Async(
+     /* Calculate the cpHash Values */
+     r = init_session_tab(esysContext, shandle1, shandle2, shandle3);
+     return_state_if_error(r, _ESYS_STATE_INIT, "Initialize session resources");
+-    iesys_compute_session_value(esysContext->session_tab[0],
++    if (nvIndexNode != NULL)
++        iesys_compute_session_value(esysContext->session_tab[0],
+                 &nvIndexNode->rsrc.name, &nvIndexNode->auth);
++    else
++        iesys_compute_session_value(esysContext->session_tab[0], NULL, NULL);
++
+     iesys_compute_session_value(esysContext->session_tab[1], NULL, NULL);
+     iesys_compute_session_value(esysContext->session_tab[2], NULL, NULL);
+ 
+diff --git a/src/tss2-esys/api/Esys_NV_DefineSpace.c b/src/tss2-esys/api/Esys_NV_DefineSpace.c
+index 01b6a3e3fd7b..70ae2a73d0be 100644
+--- a/src/tss2-esys/api/Esys_NV_DefineSpace.c
++++ b/src/tss2-esys/api/Esys_NV_DefineSpace.c
+@@ -213,8 +213,12 @@ Esys_NV_DefineSpace_Async(
+     /* Calculate the cpHash Values */
+     r = init_session_tab(esysContext, shandle1, shandle2, shandle3);
+     return_state_if_error(r, _ESYS_STATE_INIT, "Initialize session resources");
+-    iesys_compute_session_value(esysContext->session_tab[0],
++    if (authHandleNode != NULL)
++        iesys_compute_session_value(esysContext->session_tab[0],
+                 &authHandleNode->rsrc.name, &authHandleNode->auth);
++    else
++        iesys_compute_session_value(esysContext->session_tab[0], NULL, NULL);
++
+     iesys_compute_session_value(esysContext->session_tab[1], NULL, NULL);
+     iesys_compute_session_value(esysContext->session_tab[2], NULL, NULL);
+ 
+diff --git a/src/tss2-esys/api/Esys_NV_Extend.c b/src/tss2-esys/api/Esys_NV_Extend.c
+index 23eeabddc24d..0b3d61b99405 100644
+--- a/src/tss2-esys/api/Esys_NV_Extend.c
++++ b/src/tss2-esys/api/Esys_NV_Extend.c
+@@ -194,8 +194,12 @@ Esys_NV_Extend_Async(
+     /* Calculate the cpHash Values */
+     r = init_session_tab(esysContext, shandle1, shandle2, shandle3);
+     return_state_if_error(r, _ESYS_STATE_INIT, "Initialize session resources");
+-    iesys_compute_session_value(esysContext->session_tab[0],
++    if (authHandleNode != NULL)
++        iesys_compute_session_value(esysContext->session_tab[0],
+                 &authHandleNode->rsrc.name, &authHandleNode->auth);
++    else
++        iesys_compute_session_value(esysContext->session_tab[0], NULL, NULL);
++
+     iesys_compute_session_value(esysContext->session_tab[1], NULL, NULL);
+     iesys_compute_session_value(esysContext->session_tab[2], NULL, NULL);
+ 
+diff --git a/src/tss2-esys/api/Esys_NV_GlobalWriteLock.c b/src/tss2-esys/api/Esys_NV_GlobalWriteLock.c
+index f84ec4f0994e..56a9b1171462 100644
+--- a/src/tss2-esys/api/Esys_NV_GlobalWriteLock.c
++++ b/src/tss2-esys/api/Esys_NV_GlobalWriteLock.c
+@@ -176,8 +176,12 @@ Esys_NV_GlobalWriteLock_Async(
+     /* Calculate the cpHash Values */
+     r = init_session_tab(esysContext, shandle1, shandle2, shandle3);
+     return_state_if_error(r, _ESYS_STATE_INIT, "Initialize session resources");
+-    iesys_compute_session_value(esysContext->session_tab[0],
++    if (authHandleNode != NULL)
++        iesys_compute_session_value(esysContext->session_tab[0],
+                 &authHandleNode->rsrc.name, &authHandleNode->auth);
++    else
++        iesys_compute_session_value(esysContext->session_tab[0], NULL, NULL);
++
+     iesys_compute_session_value(esysContext->session_tab[1], NULL, NULL);
+     iesys_compute_session_value(esysContext->session_tab[2], NULL, NULL);
+ 
+diff --git a/src/tss2-esys/api/Esys_NV_Increment.c b/src/tss2-esys/api/Esys_NV_Increment.c
+index 17504c6db1f1..6248b4b6c007 100644
+--- a/src/tss2-esys/api/Esys_NV_Increment.c
++++ b/src/tss2-esys/api/Esys_NV_Increment.c
+@@ -195,8 +195,12 @@ Esys_NV_Increment_Async(
+     /* Calculate the cpHash Values */
+     r = init_session_tab(esysContext, shandle1, shandle2, shandle3);
+     return_state_if_error(r, _ESYS_STATE_INIT, "Initialize session resources");
+-    iesys_compute_session_value(esysContext->session_tab[0],
++    if (authHandleNode != NULL)
++        iesys_compute_session_value(esysContext->session_tab[0],
+                 &authHandleNode->rsrc.name, &authHandleNode->auth);
++    else
++        iesys_compute_session_value(esysContext->session_tab[0], NULL, NULL);
++
+     iesys_compute_session_value(esysContext->session_tab[1], NULL, NULL);
+     iesys_compute_session_value(esysContext->session_tab[2], NULL, NULL);
+ 
+diff --git a/src/tss2-esys/api/Esys_NV_Read.c b/src/tss2-esys/api/Esys_NV_Read.c
+index f97784f72b85..40f54ec7fea4 100644
+--- a/src/tss2-esys/api/Esys_NV_Read.c
++++ b/src/tss2-esys/api/Esys_NV_Read.c
+@@ -192,8 +192,12 @@ Esys_NV_Read_Async(
+     /* Calculate the cpHash Values */
+     r = init_session_tab(esysContext, shandle1, shandle2, shandle3);
+     return_state_if_error(r, _ESYS_STATE_INIT, "Initialize session resources");
+-    iesys_compute_session_value(esysContext->session_tab[0],
++    if (authHandleNode != NULL)
++        iesys_compute_session_value(esysContext->session_tab[0],
+                 &authHandleNode->rsrc.name, &authHandleNode->auth);
++    else
++        iesys_compute_session_value(esysContext->session_tab[0], NULL, NULL);
++
+     iesys_compute_session_value(esysContext->session_tab[1], NULL, NULL);
+     iesys_compute_session_value(esysContext->session_tab[2], NULL, NULL);
+ 
+diff --git a/src/tss2-esys/api/Esys_NV_ReadLock.c b/src/tss2-esys/api/Esys_NV_ReadLock.c
+index ee15450f3e09..529446a02b30 100644
+--- a/src/tss2-esys/api/Esys_NV_ReadLock.c
++++ b/src/tss2-esys/api/Esys_NV_ReadLock.c
+@@ -195,8 +195,12 @@ Esys_NV_ReadLock_Async(
+     /* Calculate the cpHash Values */
+     r = init_session_tab(esysContext, shandle1, shandle2, shandle3);
+     return_state_if_error(r, _ESYS_STATE_INIT, "Initialize session resources");
+-    iesys_compute_session_value(esysContext->session_tab[0],
++    if (authHandleNode != NULL)
++        iesys_compute_session_value(esysContext->session_tab[0],
+                 &authHandleNode->rsrc.name, &authHandleNode->auth);
++    else
++        iesys_compute_session_value(esysContext->session_tab[0], NULL, NULL);
++
+     iesys_compute_session_value(esysContext->session_tab[1], NULL, NULL);
+     iesys_compute_session_value(esysContext->session_tab[2], NULL, NULL);
+ 
+diff --git a/src/tss2-esys/api/Esys_NV_SetBits.c b/src/tss2-esys/api/Esys_NV_SetBits.c
+index a3d5508c0cbe..17d769880e16 100644
+--- a/src/tss2-esys/api/Esys_NV_SetBits.c
++++ b/src/tss2-esys/api/Esys_NV_SetBits.c
+@@ -200,8 +200,12 @@ Esys_NV_SetBits_Async(
+     /* Calculate the cpHash Values */
+     r = init_session_tab(esysContext, shandle1, shandle2, shandle3);
+     return_state_if_error(r, _ESYS_STATE_INIT, "Initialize session resources");
+-    iesys_compute_session_value(esysContext->session_tab[0],
++    if (authHandleNode != NULL)
++        iesys_compute_session_value(esysContext->session_tab[0],
+                 &authHandleNode->rsrc.name, &authHandleNode->auth);
++    else
++        iesys_compute_session_value(esysContext->session_tab[0], NULL, NULL);
++
+     iesys_compute_session_value(esysContext->session_tab[1], NULL, NULL);
+     iesys_compute_session_value(esysContext->session_tab[2], NULL, NULL);
+ 
+diff --git a/src/tss2-esys/api/Esys_NV_UndefineSpace.c b/src/tss2-esys/api/Esys_NV_UndefineSpace.c
+index e816299dddbf..14a04789eb6e 100644
+--- a/src/tss2-esys/api/Esys_NV_UndefineSpace.c
++++ b/src/tss2-esys/api/Esys_NV_UndefineSpace.c
+@@ -193,8 +193,12 @@ Esys_NV_UndefineSpace_Async(
+     /* Calculate the cpHash Values */
+     r = init_session_tab(esysContext, shandle1, shandle2, shandle3);
+     return_state_if_error(r, _ESYS_STATE_INIT, "Initialize session resources");
+-    iesys_compute_session_value(esysContext->session_tab[0],
++    if (authHandleNode != NULL)
++        iesys_compute_session_value(esysContext->session_tab[0],
+                 &authHandleNode->rsrc.name, &authHandleNode->auth);
++    else
++        iesys_compute_session_value(esysContext->session_tab[0], NULL, NULL);
++
+     iesys_compute_session_value(esysContext->session_tab[1], NULL, NULL);
+     iesys_compute_session_value(esysContext->session_tab[2], NULL, NULL);
+ 
+diff --git a/src/tss2-esys/api/Esys_NV_UndefineSpaceSpecial.c b/src/tss2-esys/api/Esys_NV_UndefineSpaceSpecial.c
+index c3df73f80a25..bd5aa2ef838d 100644
+--- a/src/tss2-esys/api/Esys_NV_UndefineSpaceSpecial.c
++++ b/src/tss2-esys/api/Esys_NV_UndefineSpaceSpecial.c
+@@ -195,10 +195,18 @@ Esys_NV_UndefineSpaceSpecial_Async(
+     /* Calculate the cpHash Values */
+     r = init_session_tab(esysContext, shandle1, shandle2, shandle3);
+     return_state_if_error(r, _ESYS_STATE_INIT, "Initialize session resources");
+-    iesys_compute_session_value(esysContext->session_tab[0],
++    if (nvIndexNode != NULL)
++        iesys_compute_session_value(esysContext->session_tab[0],
+                 &nvIndexNode->rsrc.name, &nvIndexNode->auth);
+-    iesys_compute_session_value(esysContext->session_tab[1],
++    else
++        iesys_compute_session_value(esysContext->session_tab[0], NULL, NULL);
++
++    if (platformNode != NULL)
++        iesys_compute_session_value(esysContext->session_tab[1],
+                 &platformNode->rsrc.name, &platformNode->auth);
++    else
++        iesys_compute_session_value(esysContext->session_tab[1], NULL, NULL);
++
+     iesys_compute_session_value(esysContext->session_tab[2], NULL, NULL);
+ 
+     /* Generate the auth values and set them in the SAPI command buffer */
+diff --git a/src/tss2-esys/api/Esys_NV_Write.c b/src/tss2-esys/api/Esys_NV_Write.c
+index f18e9d9724d7..c132def44c4a 100644
+--- a/src/tss2-esys/api/Esys_NV_Write.c
++++ b/src/tss2-esys/api/Esys_NV_Write.c
+@@ -198,8 +198,12 @@ Esys_NV_Write_Async(
+     /* Calculate the cpHash Values */
+     r = init_session_tab(esysContext, shandle1, shandle2, shandle3);
+     return_state_if_error(r, _ESYS_STATE_INIT, "Initialize session resources");
+-    iesys_compute_session_value(esysContext->session_tab[0],
++    if (authHandleNode != NULL)
++        iesys_compute_session_value(esysContext->session_tab[0],
+                 &authHandleNode->rsrc.name, &authHandleNode->auth);
++    else
++        iesys_compute_session_value(esysContext->session_tab[0], NULL, NULL);
++
+     iesys_compute_session_value(esysContext->session_tab[1], NULL, NULL);
+     iesys_compute_session_value(esysContext->session_tab[2], NULL, NULL);
+ 
+diff --git a/src/tss2-esys/api/Esys_NV_WriteLock.c b/src/tss2-esys/api/Esys_NV_WriteLock.c
+index b2a8f646aaf4..c8b7ef4d2bc6 100644
+--- a/src/tss2-esys/api/Esys_NV_WriteLock.c
++++ b/src/tss2-esys/api/Esys_NV_WriteLock.c
+@@ -195,8 +195,12 @@ Esys_NV_WriteLock_Async(
+     /* Calculate the cpHash Values */
+     r = init_session_tab(esysContext, shandle1, shandle2, shandle3);
+     return_state_if_error(r, _ESYS_STATE_INIT, "Initialize session resources");
+-    iesys_compute_session_value(esysContext->session_tab[0],
++    if (authHandleNode != NULL)
++        iesys_compute_session_value(esysContext->session_tab[0],
+                 &authHandleNode->rsrc.name, &authHandleNode->auth);
++    else
++        iesys_compute_session_value(esysContext->session_tab[0], NULL, NULL);
++
+     iesys_compute_session_value(esysContext->session_tab[1], NULL, NULL);
+     iesys_compute_session_value(esysContext->session_tab[2], NULL, NULL);
+ 
+diff --git a/src/tss2-esys/api/Esys_ObjectChangeAuth.c b/src/tss2-esys/api/Esys_ObjectChangeAuth.c
+index e7e018893f68..408b354f057a 100644
+--- a/src/tss2-esys/api/Esys_ObjectChangeAuth.c
++++ b/src/tss2-esys/api/Esys_ObjectChangeAuth.c
+@@ -183,8 +183,12 @@ Esys_ObjectChangeAuth_Async(
+     /* Calculate the cpHash Values */
+     r = init_session_tab(esysContext, shandle1, shandle2, shandle3);
+     return_state_if_error(r, _ESYS_STATE_INIT, "Initialize session resources");
+-    iesys_compute_session_value(esysContext->session_tab[0],
++    if (objectHandleNode != NULL)
++        iesys_compute_session_value(esysContext->session_tab[0],
+                 &objectHandleNode->rsrc.name, &objectHandleNode->auth);
++    else
++        iesys_compute_session_value(esysContext->session_tab[0], NULL, NULL);
++
+     iesys_compute_session_value(esysContext->session_tab[1], NULL, NULL);
+     iesys_compute_session_value(esysContext->session_tab[2], NULL, NULL);
+ 
+diff --git a/src/tss2-esys/api/Esys_PCR_Allocate.c b/src/tss2-esys/api/Esys_PCR_Allocate.c
+index ea82b45182ae..d9a426ce8bab 100644
+--- a/src/tss2-esys/api/Esys_PCR_Allocate.c
++++ b/src/tss2-esys/api/Esys_PCR_Allocate.c
+@@ -194,8 +194,12 @@ Esys_PCR_Allocate_Async(
+     /* Calculate the cpHash Values */
+     r = init_session_tab(esysContext, shandle1, shandle2, shandle3);
+     return_state_if_error(r, _ESYS_STATE_INIT, "Initialize session resources");
+-    iesys_compute_session_value(esysContext->session_tab[0],
++    if (authHandleNode != NULL)
++        iesys_compute_session_value(esysContext->session_tab[0],
+                 &authHandleNode->rsrc.name, &authHandleNode->auth);
++    else
++        iesys_compute_session_value(esysContext->session_tab[0], NULL, NULL);
++
+     iesys_compute_session_value(esysContext->session_tab[1], NULL, NULL);
+     iesys_compute_session_value(esysContext->session_tab[2], NULL, NULL);
+ 
+diff --git a/src/tss2-esys/api/Esys_PCR_Event.c b/src/tss2-esys/api/Esys_PCR_Event.c
+index 30ef453adc17..a01335629141 100644
+--- a/src/tss2-esys/api/Esys_PCR_Event.c
++++ b/src/tss2-esys/api/Esys_PCR_Event.c
+@@ -176,8 +176,12 @@ Esys_PCR_Event_Async(
+     /* Calculate the cpHash Values */
+     r = init_session_tab(esysContext, shandle1, shandle2, shandle3);
+     return_state_if_error(r, _ESYS_STATE_INIT, "Initialize session resources");
+-    iesys_compute_session_value(esysContext->session_tab[0],
++    if (pcrHandleNode != NULL)
++        iesys_compute_session_value(esysContext->session_tab[0],
+                 &pcrHandleNode->rsrc.name, &pcrHandleNode->auth);
++    else
++        iesys_compute_session_value(esysContext->session_tab[0], NULL, NULL);
++
+     iesys_compute_session_value(esysContext->session_tab[1], NULL, NULL);
+     iesys_compute_session_value(esysContext->session_tab[2], NULL, NULL);
+ 
+diff --git a/src/tss2-esys/api/Esys_PCR_Extend.c b/src/tss2-esys/api/Esys_PCR_Extend.c
+index bbb1e4133aa2..8e2d4ad39403 100644
+--- a/src/tss2-esys/api/Esys_PCR_Extend.c
++++ b/src/tss2-esys/api/Esys_PCR_Extend.c
+@@ -179,8 +179,12 @@ Esys_PCR_Extend_Async(
+     /* Calculate the cpHash Values */
+     r = init_session_tab(esysContext, shandle1, shandle2, shandle3);
+     return_state_if_error(r, _ESYS_STATE_INIT, "Initialize session resources");
+-    iesys_compute_session_value(esysContext->session_tab[0],
++    if (pcrHandleNode != NULL)
++        iesys_compute_session_value(esysContext->session_tab[0],
+                 &pcrHandleNode->rsrc.name, &pcrHandleNode->auth);
++    else
++        iesys_compute_session_value(esysContext->session_tab[0], NULL, NULL);
++
+     iesys_compute_session_value(esysContext->session_tab[1], NULL, NULL);
+     iesys_compute_session_value(esysContext->session_tab[2], NULL, NULL);
+ 
+diff --git a/src/tss2-esys/api/Esys_PCR_Reset.c b/src/tss2-esys/api/Esys_PCR_Reset.c
+index ed5a9aa49089..178a7924632c 100644
+--- a/src/tss2-esys/api/Esys_PCR_Reset.c
++++ b/src/tss2-esys/api/Esys_PCR_Reset.c
+@@ -175,8 +175,12 @@ Esys_PCR_Reset_Async(
+     /* Calculate the cpHash Values */
+     r = init_session_tab(esysContext, shandle1, shandle2, shandle3);
+     return_state_if_error(r, _ESYS_STATE_INIT, "Initialize session resources");
+-    iesys_compute_session_value(esysContext->session_tab[0],
++    if (pcrHandleNode != NULL)
++        iesys_compute_session_value(esysContext->session_tab[0],
+                 &pcrHandleNode->rsrc.name, &pcrHandleNode->auth);
++    else
++        iesys_compute_session_value(esysContext->session_tab[0], NULL, NULL);
++
+     iesys_compute_session_value(esysContext->session_tab[1], NULL, NULL);
+     iesys_compute_session_value(esysContext->session_tab[2], NULL, NULL);
+ 
+diff --git a/src/tss2-esys/api/Esys_PCR_SetAuthPolicy.c b/src/tss2-esys/api/Esys_PCR_SetAuthPolicy.c
+index a98817d36cd6..a7197c945103 100644
+--- a/src/tss2-esys/api/Esys_PCR_SetAuthPolicy.c
++++ b/src/tss2-esys/api/Esys_PCR_SetAuthPolicy.c
+@@ -184,8 +184,12 @@ Esys_PCR_SetAuthPolicy_Async(
+     /* Calculate the cpHash Values */
+     r = init_session_tab(esysContext, shandle1, shandle2, shandle3);
+     return_state_if_error(r, _ESYS_STATE_INIT, "Initialize session resources");
+-    iesys_compute_session_value(esysContext->session_tab[0],
++    if (authHandleNode != NULL)
++        iesys_compute_session_value(esysContext->session_tab[0],
+                 &authHandleNode->rsrc.name, &authHandleNode->auth);
++    else
++        iesys_compute_session_value(esysContext->session_tab[0], NULL, NULL);
++
+     iesys_compute_session_value(esysContext->session_tab[1], NULL, NULL);
+     iesys_compute_session_value(esysContext->session_tab[2], NULL, NULL);
+ 
+diff --git a/src/tss2-esys/api/Esys_PCR_SetAuthValue.c b/src/tss2-esys/api/Esys_PCR_SetAuthValue.c
+index 8bd1e37b3bc5..68e7c8a6d95f 100644
+--- a/src/tss2-esys/api/Esys_PCR_SetAuthValue.c
++++ b/src/tss2-esys/api/Esys_PCR_SetAuthValue.c
+@@ -175,8 +175,12 @@ Esys_PCR_SetAuthValue_Async(
+     /* Calculate the cpHash Values */
+     r = init_session_tab(esysContext, shandle1, shandle2, shandle3);
+     return_state_if_error(r, _ESYS_STATE_INIT, "Initialize session resources");
+-    iesys_compute_session_value(esysContext->session_tab[0],
++    if (pcrHandleNode != NULL)
++        iesys_compute_session_value(esysContext->session_tab[0],
+                 &pcrHandleNode->rsrc.name, &pcrHandleNode->auth);
++    else
++        iesys_compute_session_value(esysContext->session_tab[0], NULL, NULL);
++
+     iesys_compute_session_value(esysContext->session_tab[1], NULL, NULL);
+     iesys_compute_session_value(esysContext->session_tab[2], NULL, NULL);
+ 
+diff --git a/src/tss2-esys/api/Esys_PP_Commands.c b/src/tss2-esys/api/Esys_PP_Commands.c
+index 188a5a459124..a7b803482a19 100644
+--- a/src/tss2-esys/api/Esys_PP_Commands.c
++++ b/src/tss2-esys/api/Esys_PP_Commands.c
+@@ -189,8 +189,12 @@ Esys_PP_Commands_Async(
+     /* Calculate the cpHash Values */
+     r = init_session_tab(esysContext, shandle1, shandle2, shandle3);
+     return_state_if_error(r, _ESYS_STATE_INIT, "Initialize session resources");
+-    iesys_compute_session_value(esysContext->session_tab[0],
++    if (authNode != NULL)
++        iesys_compute_session_value(esysContext->session_tab[0],
+                 &authNode->rsrc.name, &authNode->auth);
++    else
++        iesys_compute_session_value(esysContext->session_tab[0], NULL, NULL);
++
+     iesys_compute_session_value(esysContext->session_tab[1], NULL, NULL);
+     iesys_compute_session_value(esysContext->session_tab[2], NULL, NULL);
+ 
+diff --git a/src/tss2-esys/api/Esys_PolicyAuthorizeNV.c b/src/tss2-esys/api/Esys_PolicyAuthorizeNV.c
+index bf52ec0d7041..4b71768872d7 100644
+--- a/src/tss2-esys/api/Esys_PolicyAuthorizeNV.c
++++ b/src/tss2-esys/api/Esys_PolicyAuthorizeNV.c
+@@ -199,8 +199,12 @@ Esys_PolicyAuthorizeNV_Async(
+     /* Calculate the cpHash Values */
+     r = init_session_tab(esysContext, shandle1, shandle2, shandle3);
+     return_state_if_error(r, _ESYS_STATE_INIT, "Initialize session resources");
+-    iesys_compute_session_value(esysContext->session_tab[0],
++    if (authHandleNode != NULL)
++        iesys_compute_session_value(esysContext->session_tab[0],
+                 &authHandleNode->rsrc.name, &authHandleNode->auth);
++    else
++        iesys_compute_session_value(esysContext->session_tab[0], NULL, NULL);
++
+     iesys_compute_session_value(esysContext->session_tab[1], NULL, NULL);
+     iesys_compute_session_value(esysContext->session_tab[2], NULL, NULL);
+ 
+diff --git a/src/tss2-esys/api/Esys_PolicyNV.c b/src/tss2-esys/api/Esys_PolicyNV.c
+index 752856e2eda7..cfff5fc33da1 100644
+--- a/src/tss2-esys/api/Esys_PolicyNV.c
++++ b/src/tss2-esys/api/Esys_PolicyNV.c
+@@ -206,8 +206,12 @@ Esys_PolicyNV_Async(
+     /* Calculate the cpHash Values */
+     r = init_session_tab(esysContext, shandle1, shandle2, shandle3);
+     return_state_if_error(r, _ESYS_STATE_INIT, "Initialize session resources");
+-    iesys_compute_session_value(esysContext->session_tab[0],
++    if (authHandleNode != NULL)
++        iesys_compute_session_value(esysContext->session_tab[0],
+                 &authHandleNode->rsrc.name, &authHandleNode->auth);
++    else
++        iesys_compute_session_value(esysContext->session_tab[0], NULL, NULL);
++
+     iesys_compute_session_value(esysContext->session_tab[1], NULL, NULL);
+     iesys_compute_session_value(esysContext->session_tab[2], NULL, NULL);
+ 
+diff --git a/src/tss2-esys/api/Esys_PolicySecret.c b/src/tss2-esys/api/Esys_PolicySecret.c
+index 671c40cdba0c..c755578e9da7 100644
+--- a/src/tss2-esys/api/Esys_PolicySecret.c
++++ b/src/tss2-esys/api/Esys_PolicySecret.c
+@@ -208,8 +208,12 @@ Esys_PolicySecret_Async(
+     /* Calculate the cpHash Values */
+     r = init_session_tab(esysContext, shandle1, shandle2, shandle3);
+     return_state_if_error(r, _ESYS_STATE_INIT, "Initialize session resources");
+-    iesys_compute_session_value(esysContext->session_tab[0],
++    if (authHandleNode != NULL)
++        iesys_compute_session_value(esysContext->session_tab[0],
+                 &authHandleNode->rsrc.name, &authHandleNode->auth);
++    else
++        iesys_compute_session_value(esysContext->session_tab[0], NULL, NULL);
++
+     iesys_compute_session_value(esysContext->session_tab[1], NULL, NULL);
+     iesys_compute_session_value(esysContext->session_tab[2], NULL, NULL);
+ 
+diff --git a/src/tss2-esys/api/Esys_Quote.c b/src/tss2-esys/api/Esys_Quote.c
+index 3c3f7f10f852..44ba57f2fe1a 100644
+--- a/src/tss2-esys/api/Esys_Quote.c
++++ b/src/tss2-esys/api/Esys_Quote.c
+@@ -185,8 +185,12 @@ Esys_Quote_Async(
+     /* Calculate the cpHash Values */
+     r = init_session_tab(esysContext, shandle1, shandle2, shandle3);
+     return_state_if_error(r, _ESYS_STATE_INIT, "Initialize session resources");
+-    iesys_compute_session_value(esysContext->session_tab[0],
++    if (signHandleNode != NULL)
++        iesys_compute_session_value(esysContext->session_tab[0],
+                 &signHandleNode->rsrc.name, &signHandleNode->auth);
++    else
++        iesys_compute_session_value(esysContext->session_tab[0], NULL, NULL);
++
+     iesys_compute_session_value(esysContext->session_tab[1], NULL, NULL);
+     iesys_compute_session_value(esysContext->session_tab[2], NULL, NULL);
+ 
+diff --git a/src/tss2-esys/api/Esys_RSA_Decrypt.c b/src/tss2-esys/api/Esys_RSA_Decrypt.c
+index 30ec54e3d0d2..a4c953be1f3b 100644
+--- a/src/tss2-esys/api/Esys_RSA_Decrypt.c
++++ b/src/tss2-esys/api/Esys_RSA_Decrypt.c
+@@ -182,8 +182,12 @@ Esys_RSA_Decrypt_Async(
+     /* Calculate the cpHash Values */
+     r = init_session_tab(esysContext, shandle1, shandle2, shandle3);
+     return_state_if_error(r, _ESYS_STATE_INIT, "Initialize session resources");
+-    iesys_compute_session_value(esysContext->session_tab[0],
++    if (keyHandleNode != NULL)
++        iesys_compute_session_value(esysContext->session_tab[0],
+                 &keyHandleNode->rsrc.name, &keyHandleNode->auth);
++    else
++        iesys_compute_session_value(esysContext->session_tab[0], NULL, NULL);
++
+     iesys_compute_session_value(esysContext->session_tab[1], NULL, NULL);
+     iesys_compute_session_value(esysContext->session_tab[2], NULL, NULL);
+ 
+diff --git a/src/tss2-esys/api/Esys_Rewrap.c b/src/tss2-esys/api/Esys_Rewrap.c
+index f31538d008fc..f1127ce47706 100644
+--- a/src/tss2-esys/api/Esys_Rewrap.c
++++ b/src/tss2-esys/api/Esys_Rewrap.c
+@@ -197,8 +197,12 @@ Esys_Rewrap_Async(
+     /* Calculate the cpHash Values */
+     r = init_session_tab(esysContext, shandle1, shandle2, shandle3);
+     return_state_if_error(r, _ESYS_STATE_INIT, "Initialize session resources");
+-    iesys_compute_session_value(esysContext->session_tab[0],
++    if (oldParentNode != NULL)
++        iesys_compute_session_value(esysContext->session_tab[0],
+                 &oldParentNode->rsrc.name, &oldParentNode->auth);
++    else
++        iesys_compute_session_value(esysContext->session_tab[0], NULL, NULL);
++
+     iesys_compute_session_value(esysContext->session_tab[1], NULL, NULL);
+     iesys_compute_session_value(esysContext->session_tab[2], NULL, NULL);
+ 
+diff --git a/src/tss2-esys/api/Esys_SequenceComplete.c b/src/tss2-esys/api/Esys_SequenceComplete.c
+index c6afd9097366..2227afc1f453 100644
+--- a/src/tss2-esys/api/Esys_SequenceComplete.c
++++ b/src/tss2-esys/api/Esys_SequenceComplete.c
+@@ -190,9 +190,12 @@ Esys_SequenceComplete_Async(
+     /* Calculate the cpHash Values */
+     r = init_session_tab(esysContext, shandle1, shandle2, shandle3);
+     return_state_if_error(r, _ESYS_STATE_INIT, "Initialize session resources");
+-    iesys_compute_session_value(esysContext->session_tab[0],
+-                sequenceHandleNode ? &sequenceHandleNode->rsrc.name : NULL,
+-                sequenceHandleNode ? &sequenceHandleNode->auth : NULL);
++    if (sequenceHandleNode != NULL)
++        iesys_compute_session_value(esysContext->session_tab[0],
++                &sequenceHandleNode->rsrc.name, &sequenceHandleNode->auth);
++    else
++        iesys_compute_session_value(esysContext->session_tab[0], NULL, NULL);
++
+     iesys_compute_session_value(esysContext->session_tab[1], NULL, NULL);
+     iesys_compute_session_value(esysContext->session_tab[2], NULL, NULL);
+ 
+diff --git a/src/tss2-esys/api/Esys_SequenceUpdate.c b/src/tss2-esys/api/Esys_SequenceUpdate.c
+index add3ec4f33bf..c1bc93daeb03 100644
+--- a/src/tss2-esys/api/Esys_SequenceUpdate.c
++++ b/src/tss2-esys/api/Esys_SequenceUpdate.c
+@@ -175,9 +175,12 @@ Esys_SequenceUpdate_Async(
+     /* Calculate the cpHash Values */
+     r = init_session_tab(esysContext, shandle1, shandle2, shandle3);
+     return_state_if_error(r, _ESYS_STATE_INIT, "Initialize session resources");
+-    iesys_compute_session_value(esysContext->session_tab[0],
+-                sequenceHandleNode ? &sequenceHandleNode->rsrc.name : NULL,
+-                sequenceHandleNode ? &sequenceHandleNode->auth : NULL);
++    if (sequenceHandleNode != NULL)
++        iesys_compute_session_value(esysContext->session_tab[0],
++                &sequenceHandleNode->rsrc.name, &sequenceHandleNode->auth);
++    else
++        iesys_compute_session_value(esysContext->session_tab[0], NULL, NULL);
++
+     iesys_compute_session_value(esysContext->session_tab[1], NULL, NULL);
+     iesys_compute_session_value(esysContext->session_tab[2], NULL, NULL);
+ 
+diff --git a/src/tss2-esys/api/Esys_SetAlgorithmSet.c b/src/tss2-esys/api/Esys_SetAlgorithmSet.c
+index d73771e3f74a..4716f04b8793 100644
+--- a/src/tss2-esys/api/Esys_SetAlgorithmSet.c
++++ b/src/tss2-esys/api/Esys_SetAlgorithmSet.c
+@@ -182,8 +182,12 @@ Esys_SetAlgorithmSet_Async(
+     /* Calculate the cpHash Values */
+     r = init_session_tab(esysContext, shandle1, shandle2, shandle3);
+     return_state_if_error(r, _ESYS_STATE_INIT, "Initialize session resources");
+-    iesys_compute_session_value(esysContext->session_tab[0],
++    if (authHandleNode != NULL)
++        iesys_compute_session_value(esysContext->session_tab[0],
+                 &authHandleNode->rsrc.name, &authHandleNode->auth);
++    else
++        iesys_compute_session_value(esysContext->session_tab[0], NULL, NULL);
++
+     iesys_compute_session_value(esysContext->session_tab[1], NULL, NULL);
+     iesys_compute_session_value(esysContext->session_tab[2], NULL, NULL);
+ 
+diff --git a/src/tss2-esys/api/Esys_SetCommandCodeAuditStatus.c b/src/tss2-esys/api/Esys_SetCommandCodeAuditStatus.c
+index 1290a87b7563..38268b94e1cb 100644
+--- a/src/tss2-esys/api/Esys_SetCommandCodeAuditStatus.c
++++ b/src/tss2-esys/api/Esys_SetCommandCodeAuditStatus.c
+@@ -196,8 +196,12 @@ Esys_SetCommandCodeAuditStatus_Async(
+     /* Calculate the cpHash Values */
+     r = init_session_tab(esysContext, shandle1, shandle2, shandle3);
+     return_state_if_error(r, _ESYS_STATE_INIT, "Initialize session resources");
+-    iesys_compute_session_value(esysContext->session_tab[0],
++    if (authNode != NULL)
++        iesys_compute_session_value(esysContext->session_tab[0],
+                 &authNode->rsrc.name, &authNode->auth);
++    else
++        iesys_compute_session_value(esysContext->session_tab[0], NULL, NULL);
++
+     iesys_compute_session_value(esysContext->session_tab[1], NULL, NULL);
+     iesys_compute_session_value(esysContext->session_tab[2], NULL, NULL);
+ 
+diff --git a/src/tss2-esys/api/Esys_SetPrimaryPolicy.c b/src/tss2-esys/api/Esys_SetPrimaryPolicy.c
+index 51272d57c8e2..73b676870704 100644
+--- a/src/tss2-esys/api/Esys_SetPrimaryPolicy.c
++++ b/src/tss2-esys/api/Esys_SetPrimaryPolicy.c
+@@ -183,8 +183,12 @@ Esys_SetPrimaryPolicy_Async(
+     /* Calculate the cpHash Values */
+     r = init_session_tab(esysContext, shandle1, shandle2, shandle3);
+     return_state_if_error(r, _ESYS_STATE_INIT, "Initialize session resources");
+-    iesys_compute_session_value(esysContext->session_tab[0],
++    if (authHandleNode != NULL)
++        iesys_compute_session_value(esysContext->session_tab[0],
+                 &authHandleNode->rsrc.name, &authHandleNode->auth);
++    else
++        iesys_compute_session_value(esysContext->session_tab[0], NULL, NULL);
++
+     iesys_compute_session_value(esysContext->session_tab[1], NULL, NULL);
+     iesys_compute_session_value(esysContext->session_tab[2], NULL, NULL);
+ 
+diff --git a/src/tss2-esys/api/Esys_Sign.c b/src/tss2-esys/api/Esys_Sign.c
+index 06a0a451e4d9..374c17d35543 100644
+--- a/src/tss2-esys/api/Esys_Sign.c
++++ b/src/tss2-esys/api/Esys_Sign.c
+@@ -188,8 +188,12 @@ Esys_Sign_Async(
+     /* Calculate the cpHash Values */
+     r = init_session_tab(esysContext, shandle1, shandle2, shandle3);
+     return_state_if_error(r, _ESYS_STATE_INIT, "Initialize session resources");
+-    iesys_compute_session_value(esysContext->session_tab[0],
++    if (keyHandleNode != NULL)
++       iesys_compute_session_value(esysContext->session_tab[0],
+                 &keyHandleNode->rsrc.name, &keyHandleNode->auth);
++    else
++        iesys_compute_session_value(esysContext->session_tab[0], NULL, NULL);
++
+     iesys_compute_session_value(esysContext->session_tab[1], NULL, NULL);
+     iesys_compute_session_value(esysContext->session_tab[2], NULL, NULL);
+ 
+diff --git a/src/tss2-esys/api/Esys_Unseal.c b/src/tss2-esys/api/Esys_Unseal.c
+index 1ac785809fe8..b3203a0e5aae 100644
+--- a/src/tss2-esys/api/Esys_Unseal.c
++++ b/src/tss2-esys/api/Esys_Unseal.c
+@@ -172,8 +172,12 @@ Esys_Unseal_Async(
+     /* Calculate the cpHash Values */
+     r = init_session_tab(esysContext, shandle1, shandle2, shandle3);
+     return_state_if_error(r, _ESYS_STATE_INIT, "Initialize session resources");
+-    iesys_compute_session_value(esysContext->session_tab[0],
++    if (itemHandleNode != NULL)
++        iesys_compute_session_value(esysContext->session_tab[0],
+                 &itemHandleNode->rsrc.name, &itemHandleNode->auth);
++    else
++        iesys_compute_session_value(esysContext->session_tab[0], NULL, NULL);
++
+     iesys_compute_session_value(esysContext->session_tab[1], NULL, NULL);
+     iesys_compute_session_value(esysContext->session_tab[2], NULL, NULL);
+ 
+diff --git a/src/tss2-esys/api/Esys_ZGen_2Phase.c b/src/tss2-esys/api/Esys_ZGen_2Phase.c
+index cb30880c3c71..c59996d35aea 100644
+--- a/src/tss2-esys/api/Esys_ZGen_2Phase.c
++++ b/src/tss2-esys/api/Esys_ZGen_2Phase.c
+@@ -190,8 +190,12 @@ Esys_ZGen_2Phase_Async(
+     /* Calculate the cpHash Values */
+     r = init_session_tab(esysContext, shandle1, shandle2, shandle3);
+     return_state_if_error(r, _ESYS_STATE_INIT, "Initialize session resources");
+-    iesys_compute_session_value(esysContext->session_tab[0],
++    if (keyANode != NULL)
++        iesys_compute_session_value(esysContext->session_tab[0],
+                 &keyANode->rsrc.name, &keyANode->auth);
++    else
++        iesys_compute_session_value(esysContext->session_tab[0], NULL, NULL);
++
+     iesys_compute_session_value(esysContext->session_tab[1], NULL, NULL);
+     iesys_compute_session_value(esysContext->session_tab[2], NULL, NULL);
+ 
+-- 
+2.27.0
+

@@ -1,0 +1,29 @@
+From 76641c1e6b016979973fead7a24bb8fca4ee8325 Mon Sep 17 00:00:00 2001
+From: Johannes Holland <johannes.holland@infineon.com>
+Date: Thu, 26 Sep 2019 09:46:09 +0100
+Subject: [PATCH] esys: fix keysize of ECC curve TPM2_ECC_NISTP224
+
+In esys_crypto_ossl.c, for the ECC curve TPM2_ECC_NISTP244 a key size of
+38 is selected. However, 224 bit / 8 bit/byte = 28 byte.
+
+Signed-off-by: Johannes Holland <johannes.holland@infineon.com>
+---
+ src/tss2-esys/esys_crypto_ossl.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/tss2-esys/esys_crypto_ossl.c b/src/tss2-esys/esys_crypto_ossl.c
+index 124501964ae7..3c5d86d69705 100644
+--- a/src/tss2-esys/esys_crypto_ossl.c
++++ b/src/tss2-esys/esys_crypto_ossl.c
+@@ -804,7 +804,7 @@ iesys_cryptossl_get_ecdh_point(TPM2B_PUBLIC *key,
+         break;
+     case TPM2_ECC_NIST_P224:
+         curveId = NID_secp224r1;
+-        key_size = 38;
++        key_size = 28;
+         break;
+     case TPM2_ECC_NIST_P256:
+         curveId = NID_X9_62_prime256v1;
+-- 
+2.27.0
+

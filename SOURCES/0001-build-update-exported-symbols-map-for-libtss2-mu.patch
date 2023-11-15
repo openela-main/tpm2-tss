@@ -1,0 +1,51 @@
+From b27956422d1b5bb53a56366e9b7e978f6b95e2f9 Mon Sep 17 00:00:00 2001
+From: Erik Larsson <who+github@cnackers.org>
+Date: Mon, 2 Dec 2019 11:21:02 +0100
+Subject: [PATCH] build: update exported symbols map for libtss2-mu
+
+Signed-off-by: Erik Larsson <who+github@cnackers.org>
+---
+ lib/tss2-mu.def | 4 ++++
+ lib/tss2-mu.map | 4 ++--
+ 2 files changed, 6 insertions(+), 2 deletions(-)
+
+diff --git a/lib/tss2-mu.def b/lib/tss2-mu.def
+index 36f4ba37b9fc..3c80cf225f77 100644
+--- a/lib/tss2-mu.def
++++ b/lib/tss2-mu.def
+@@ -226,6 +226,10 @@ EXPORTS
+     Tss2_MU_TPMU_PUBLIC_PARMS_Unmarshal
+     Tss2_MU_TPMU_PUBLIC_ID_Marshal
+     Tss2_MU_TPMU_PUBLIC_ID_Unmarshal
++    Tss2_MU_TPMU_NAME_Marshal
++    Tss2_MU_TPMU_NAME_Unmarshal
++    Tss2_MU_TPMU_ENCRYPTED_SECRET_Marshal
++    Tss2_MU_TPMU_ENCRYPTED_SECRET_Unmarshal
+     Tss2_MU_TPMT_HA_Marshal
+     Tss2_MU_TPMT_HA_Unmarshal
+     Tss2_MU_TPMT_SYM_DEF_Marshal
+diff --git a/lib/tss2-mu.map b/lib/tss2-mu.map
+index 8ac754ed096a..09d9317e6749 100644
+--- a/lib/tss2-mu.map
++++ b/lib/tss2-mu.map
+@@ -228,6 +228,8 @@
+         Tss2_MU_TPMU_PUBLIC_ID_Unmarshal;
+         Tss2_MU_TPMU_NAME_Marshal;
+         Tss2_MU_TPMU_NAME_Unmarshal;
++        Tss2_MU_TPMU_ENCRYPTED_SECRET_Marshal;
++        Tss2_MU_TPMU_ENCRYPTED_SECRET_Unmarshal;
+         Tss2_MU_TPMT_HA_Marshal;
+         Tss2_MU_TPMT_HA_Unmarshal;
+         Tss2_MU_TPMT_SYM_DEF_Marshal;
+@@ -274,8 +276,6 @@
+         Tss2_MU_TPM2_NT_Unmarshal;
+         Tss2_MU_TPMI_ALG_HASH_Marshal;
+         Tss2_MU_TPMI_ALG_HASH_Unmarshal;
+-        Tss2_MU_TPMI_BYTE_Marshal;
+-        Tss2_MU_TPMI_BYTE_Unmarshal;
+     local:
+         *;
+ };
+-- 
+2.27.0
+

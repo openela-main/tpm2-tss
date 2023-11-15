@@ -1,0 +1,38 @@
+From 1ec07af70925ece698b733d55dedd1d9878b70f2 Mon Sep 17 00:00:00 2001
+From: Tadeusz Struk <tadeusz.struk@intel.com>
+Date: Fri, 24 Jan 2020 19:05:34 -0800
+Subject: [PATCH] esys: zero out ctx->salt after on startAuthSession_finish
+
+The ctx->salt is used to calculate session key during
+startAuthSession call if the caller pass a valid tpmKey
+parameter. There salt is calculated in the _Async call
+and the the session key is calculated in the _Finish call.
+The problem is that if in the same context an unsalted
+session is created after a salted session the ctx->salt
+will still hold the old value and it will incorrectly
+be used for session key calculation in the the subsequent
+_Finish call. To fix this the salt needs to be set to
+cleaned after no longer needed.
+
+Fixes: #1574
+
+Signed-off-by: Tadeusz Struk <tadeusz.struk@intel.com>
+---
+ src/tss2-esys/api/Esys_StartAuthSession.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/src/tss2-esys/api/Esys_StartAuthSession.c b/src/tss2-esys/api/Esys_StartAuthSession.c
+index 1717928a717d..6367419d7c9a 100644
+--- a/src/tss2-esys/api/Esys_StartAuthSession.c
++++ b/src/tss2-esys/api/Esys_StartAuthSession.c
+@@ -497,6 +497,7 @@ Esys_StartAuthSession_Finish(
+     goto_if_error(r, "Marshal session name", error_cleanup);
+ 
+     sessionHandleNode->rsrc.name.size = offset;
++    memset(&esysContext->salt, '\0', sizeof(esysContext->salt));
+     esysContext->state = _ESYS_STATE_INIT;
+ 
+     return TSS2_RC_SUCCESS;
+-- 
+2.27.0
+
