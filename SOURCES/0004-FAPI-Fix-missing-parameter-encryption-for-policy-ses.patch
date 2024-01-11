@@ -1,0 +1,101 @@
+From 6bb79f17b89592909830f872dc47d09c0e5dadda Mon Sep 17 00:00:00 2001
+From: Juergen Repp <juergen_repp@web.de>
+Date: Fri, 3 Mar 2023 11:17:43 +0100
+Subject: [PATCH 04/10] FAPI: Fix missing parameter encryption for policy
+ sessions.
+
+The parameter encryption for policy sessions was not enabled.
+Now the parameter encryption is enabled and the auth value of
+objects is added to the session key.
+One exception is the cp hash policy. In this case the
+the cp hash check forced by this policy would fail with an
+encrypted parameter.
+
+Signed-off-by: Juergen Repp <juergen_repp@web.de>
+---
+ src/tss2-fapi/fapi_util.c                | 28 ++++++++++++------------
+ src/tss2-fapi/ifapi_policy_execute.c     |  5 +++++
+ src/tss2-fapi/ifapi_policyutil_execute.c |  4 ++++
+ 3 files changed, 23 insertions(+), 14 deletions(-)
+
+diff --git a/src/tss2-fapi/fapi_util.c b/src/tss2-fapi/fapi_util.c
+index ded0d247..55ce3327 100644
+--- a/src/tss2-fapi/fapi_util.c
++++ b/src/tss2-fapi/fapi_util.c
+@@ -2110,21 +2110,20 @@ ifapi_authorize_object(FAPI_CONTEXT *context, IFAPI_OBJECT *object, ESYS_TR *ses
+         statecase(object->authorization_state, AUTH_INIT)
+             LOG_TRACE("**STATE** AUTH_INIT");
+ 
+-            if (!policy_digest_size(object)) {
+-                /* No policy used authorization callbacks have to be called if necessary. */
+-                if (object_with_auth(object)) {
+-                    /* Check whether hierarchy was already authorized. */
+-                    if (object->objectType != IFAPI_HIERARCHY_OBJ ||
+-                        !object->misc.hierarchy.authorized) {
+-                        char *description = NULL;
+-                        r = ifapi_get_description(object, &description);
+-                        return_if_error(r, "Get description");
+-
+-                        r = ifapi_set_auth(context, object, description);
+-                        SAFE_FREE(description);
+-                        return_if_error(r, "Set auth value");
+-                    }
++            if (object_with_auth(object)) {
++                /* Check whether hierarchy was already authorized. */
++                if (object->objectType != IFAPI_HIERARCHY_OBJ ||
++                    !object->misc.hierarchy.authorized) {
++                    char *description = NULL;
++                    r = ifapi_get_description(object, &description);
++                    return_if_error(r, "Get description");
++
++                    r = ifapi_set_auth(context, object, description);
++                    SAFE_FREE(description);
++                    return_if_error(r, "Set auth value");
+                 }
++            }
++            if (!policy_digest_size(object)) {
+                 /* No policy session needed current fapi session can be used */
+                 if (context->session1 && context->session1 != ESYS_TR_NONE)
+                     *session = context->session1;
+@@ -2133,6 +2132,7 @@ ifapi_authorize_object(FAPI_CONTEXT *context, IFAPI_OBJECT *object, ESYS_TR *ses
+                     *session = ESYS_TR_PASSWORD;
+                 break;
+             }
++
+             /* Save current object to be authorized in context. */
+             context->current_auth_object = object;
+             r = ifapi_policyutil_execute_prepare(context, get_name_alg(context, object),
+diff --git a/src/tss2-fapi/ifapi_policy_execute.c b/src/tss2-fapi/ifapi_policy_execute.c
+index c2ce3301..0e7de316 100644
+--- a/src/tss2-fapi/ifapi_policy_execute.c
++++ b/src/tss2-fapi/ifapi_policy_execute.c
+@@ -1245,6 +1245,11 @@ execute_policy_cp_hash(
+         r = Esys_PolicyCpHash_Finish(esys_ctx);
+         try_again_or_error(r, "Execute PolicyCpHash_Finish.");
+ 
++        /* Disable encryption to enable check of cp hash defined in
++           policy cp. */
++        r = Esys_TRSess_SetAttributes(esys_ctx, current_policy->session,
++                                      0, 0xff);
++
+         current_policy->state = POLICY_EXECUTE_INIT;
+         return r;
+ 
+diff --git a/src/tss2-fapi/ifapi_policyutil_execute.c b/src/tss2-fapi/ifapi_policyutil_execute.c
+index 997fb504..0e2823cb 100644
+--- a/src/tss2-fapi/ifapi_policyutil_execute.c
++++ b/src/tss2-fapi/ifapi_policyutil_execute.c
+@@ -119,6 +119,10 @@ create_session(
+         r = Esys_StartAuthSession_Finish(context->esys, session);
+         if (r != TSS2_RC_SUCCESS)
+             return r;
++
++        r = Esys_TRSess_SetAttributes(context->esys, *session,
++                                      TPMA_SESSION_ENCRYPT | TPMA_SESSION_DECRYPT,
++                                      0xff);
+         context->policy.create_session_state = CREATE_SESSION_INIT;
+         break;
+ 
+-- 
+2.41.0
+

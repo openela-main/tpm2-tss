@@ -1,0 +1,62 @@
+From e46840f3ec5932f3f9206f3eab903d82b7a977db Mon Sep 17 00:00:00 2001
+From: Juergen Repp <juergen_repp@web.de>
+Date: Mon, 27 Feb 2023 18:00:54 +0100
+Subject: [PATCH 07/10] build: Fix failed build with --disable-vendor
+
+The compilation of the marshaling functions for TPML_INTEL_PTT_PROPERTY
+is now disabled for builds with --disable-vendor.
+Fixes: #2571
+
+Signed-off-by: Juergen Repp <juergen_repp@web.de>
+---
+ include/tss2/tss2_tpm2_types.h | 2 ++
+ src/tss2-mu/tpml-types.c       | 2 ++
+ tss2-dlopen/tss2-dlopen-mu.c   | 2 ++
+ 3 files changed, 6 insertions(+)
+
+diff --git a/include/tss2/tss2_tpm2_types.h b/include/tss2/tss2_tpm2_types.h
+index 96286fb7..39a6978c 100644
+--- a/include/tss2/tss2_tpm2_types.h
++++ b/include/tss2/tss2_tpm2_types.h
+@@ -63,7 +63,9 @@
+ #define TPM2_PRIVATE_VENDOR_SPECIFIC_BYTES ((TPM2_MAX_RSA_KEY_BYTES / 2) * (3 + 2))
+ 
+ /* Vendor Specific Defines */
++#ifndef DISABLE_VENDOR
+ #define TPM2_MAX_PTT_PROPERTIES (TPM2_MAX_CAP_BUFFER / sizeof(UINT32))
++#endif
+ 
+ /* Attached Component Capabilities */
+ #define TPM2_MAX_AC_CAPABILITIES (TPM2_MAX_CAP_BUFFER / sizeof(TPMS_AC_OUTPUT))
+diff --git a/src/tss2-mu/tpml-types.c b/src/tss2-mu/tpml-types.c
+index 60f85a8c..1df9bbb8 100644
+--- a/src/tss2-mu/tpml-types.c
++++ b/src/tss2-mu/tpml-types.c
+@@ -175,8 +175,10 @@ TPML_MARSHAL(TPML_PCR_SELECTION, Tss2_MU_TPMS_PCR_SELECTION_Marshal, pcrSelectio
+ TPML_UNMARSHAL(TPML_PCR_SELECTION, Tss2_MU_TPMS_PCR_SELECTION_Unmarshal, pcrSelections)
+ TPML_MARSHAL(TPML_DIGEST_VALUES, Tss2_MU_TPMT_HA_Marshal, digests, ADDR)
+ TPML_UNMARSHAL(TPML_DIGEST_VALUES, Tss2_MU_TPMT_HA_Unmarshal, digests)
++#ifndef DISABLE_VENDOR
+ TPML_MARSHAL(TPML_INTEL_PTT_PROPERTY, Tss2_MU_UINT32_Marshal, property, VAL)
+ TPML_UNMARSHAL(TPML_INTEL_PTT_PROPERTY, Tss2_MU_UINT32_Unmarshal, property)
++#endif
+ TPML_MARSHAL(TPML_AC_CAPABILITIES, Tss2_MU_TPMS_AC_OUTPUT_Marshal, acCapabilities, ADDR)
+ TPML_UNMARSHAL(TPML_AC_CAPABILITIES, Tss2_MU_TPMS_AC_OUTPUT_Unmarshal, acCapabilities)
+ TPML_MARSHAL(TPML_TAGGED_POLICY, Tss2_MU_TPMS_TAGGED_POLICY_Marshal, policies, ADDR)
+diff --git a/tss2-dlopen/tss2-dlopen-mu.c b/tss2-dlopen/tss2-dlopen-mu.c
+index 2297818b..21cd1123 100644
+--- a/tss2-dlopen/tss2-dlopen-mu.c
++++ b/tss2-dlopen/tss2-dlopen-mu.c
+@@ -254,7 +254,9 @@ MAKE_MU_STRUCT(TPML_ALG_PROPERTY);
+ MAKE_MU_STRUCT(TPML_ECC_CURVE);
+ MAKE_MU_STRUCT(TPML_TAGGED_PCR_PROPERTY);
+ MAKE_MU_STRUCT(TPML_TAGGED_TPM_PROPERTY);
++#ifndef DISABLE_VENDOR
+ MAKE_MU_STRUCT(TPML_INTEL_PTT_PROPERTY);
++#endif
+ MAKE_MU_STRUCT(TPML_AC_CAPABILITIES);
+ MAKE_MU_STRUCT(TPML_TAGGED_POLICY);
+ MAKE_MU_STRUCT(TPML_ACT_DATA);
+-- 
+2.41.0
+

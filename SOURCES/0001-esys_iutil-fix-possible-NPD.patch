@@ -1,7 +1,7 @@
-From f140a8e5fdb2f3b9fbc3b32d1a844554008c2298 Mon Sep 17 00:00:00 2001
+From f5907e96363729e16475172ef1056532d9404482 Mon Sep 17 00:00:00 2001
 From: William Roberts <william.c.roberts@intel.com>
 Date: Fri, 3 Jun 2022 11:51:02 -0500
-Subject: [PATCH 20/23] esys_iutil: fix possible NPD
+Subject: [PATCH 1/2] esys_iutil: fix possible NPD
 
 Clang-10 scan-build reports:
 src/tss2-esys/esys_iutil.c:1366:56: warning: Dereference of null pointer
@@ -24,10 +24,10 @@ Signed-off-by: William Roberts <william.c.roberts@intel.com>
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/src/tss2-esys/esys_iutil.c b/src/tss2-esys/esys_iutil.c
-index 0cc92ca5..493f9b28 100644
+index 4d31cef8..b364dd73 100644
 --- a/src/tss2-esys/esys_iutil.c
 +++ b/src/tss2-esys/esys_iutil.c
-@@ -1339,7 +1339,7 @@ iesys_gen_auths(ESYS_CONTEXT * esys_context,
+@@ -1352,7 +1352,7 @@ iesys_gen_auths(ESYS_CONTEXT * esys_context,
                                  && encryptNonceIdx > 0) ? encryptNonce : NULL,
                                 &auths->auths[session_idx]);
          return_if_error(r, "Error while computing hmacs");
@@ -37,5 +37,5 @@ index 0cc92ca5..493f9b28 100644
              auths->count++;
          }
 -- 
-2.34.3
+2.39.2
 

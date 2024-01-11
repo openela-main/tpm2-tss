@@ -1,0 +1,61 @@
+From db8ccb1df778dc92d1be88a88ddcd9d6c92c3e63 Mon Sep 17 00:00:00 2001
+From: Juergen Repp <juergen_repp@web.de>
+Date: Mon, 3 Apr 2023 21:21:55 +0200
+Subject: [PATCH 06/10] FAPI: Fix usage of persistent handles.
+
+* Evict control for persistent keys created with Fapi_CreateKey was
+  called with the wrong handle.
+* If Fapi_Quote was executed with a primary key for this key flush
+  context was called.
+
+Signed-off-by: Juergen Repp <juergen_repp@web.de>
+---
+ src/tss2-fapi/api/Fapi_Quote.c | 14 +++++++++-----
+ src/tss2-fapi/fapi_util.c      |  1 +
+ 2 files changed, 10 insertions(+), 5 deletions(-)
+
+diff --git a/src/tss2-fapi/api/Fapi_Quote.c b/src/tss2-fapi/api/Fapi_Quote.c
+index b71267a7..61e4e3db 100644
+--- a/src/tss2-fapi/api/Fapi_Quote.c
++++ b/src/tss2-fapi/api/Fapi_Quote.c
+@@ -392,16 +392,20 @@ Fapi_Quote_Finish(
+             goto_if_error(r, "Error: PCR_Quote", error_cleanup);
+ 
+             /* Flush the key used for the quote. */
+-            r = Esys_FlushContext_Async(context->esys, command->handle);
+-            goto_if_error(r, "Error: FlushContext", error_cleanup);
++            if (!command->key_object->misc.key.persistent_handle) {
++                r = Esys_FlushContext_Async(context->esys, command->handle);
++                goto_if_error(r, "Error: FlushContext", error_cleanup);
++            }
+             command->handle = ESYS_TR_NONE;
+ 
+             fallthrough;
+ 
+         statecase(context->state, PCR_QUOTE_WAIT_FOR_FLUSH);
+-            r = Esys_FlushContext_Finish(context->esys);
+-            return_try_again(r);
+-            goto_if_error(r, "Error: Sign", error_cleanup);
++           if (!command->key_object->misc.key.persistent_handle) {
++               r = Esys_FlushContext_Finish(context->esys);
++               return_try_again(r);
++               goto_if_error(r, "Error: Sign", error_cleanup);
++           }
+ 
+             sig_key_object = command->key_object;
+             /* Convert the TPM-encoded signature into something useful for the caller. */
+diff --git a/src/tss2-fapi/fapi_util.c b/src/tss2-fapi/fapi_util.c
+index ef4a92d0..49f7dd07 100644
+--- a/src/tss2-fapi/fapi_util.c
++++ b/src/tss2-fapi/fapi_util.c
+@@ -4746,6 +4746,7 @@ ifapi_create_primary(
+ 
+     statecase(context->cmd.Key_Create.state, KEY_CREATE_PRIMARY_WAIT_FOR_AUTHORIZE2);
+         if (template->persistent_handle) {
++            object->misc.key.persistent_handle = template->persistent_handle;
+             r = ifapi_authorize_object(context, hierarchy, &auth_session);
+             FAPI_SYNC(r, "Authorize hierarchy.", error_cleanup);
+ 
+-- 
+2.41.0
+

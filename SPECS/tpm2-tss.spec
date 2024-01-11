@@ -1,52 +1,25 @@
 Name:          tpm2-tss
-Version:       3.0.3
-Release:       8%{?dist}
+Version:       3.2.2
+Release:       2%{?dist}
 Summary:       TPM2.0 Software Stack
 
-# The entire source code is under BSD except implementation.h and tpmb.h which
-# is under TCGL(Trusted Computing Group License).
-License:       BSD and TCGL
+License:       BSD
 URL:           https://github.com/tpm2-software/tpm2-tss
 Source0:       https://github.com/tpm2-software/tpm2-tss/releases/download/%{version}/%{name}-%{version}.tar.gz
-# doxygen crash
-Patch0:        tpm2-tss-3.0.0-doxygen.patch
-# OpenSSL 3 support
-Patch1:        0001-FAPI-Fix-reading-of-the-root-certificate-for-provisi.patch
-Patch2:        0002-FAPI-use-FAPI_TEST_EK_CERT_LESS-with-disable-self-ge.patch
-Patch3:        0003-Makefile.am-Use-LIBCRYPTO_CFLAGS-when-building-FAPI.patch
-Patch4:        0004-Test-Remove-duplicate-openssl-req-new.patch
-Patch5:        0005-FAPI-Test-Call-EVP_DigestSignInit-in-the-correct-ord.patch
-Patch6:        0006-FAPI-Test-Use-EVP_PKEY_base_id-to-detect-key-type.patch
-Patch7:        0007-FAPI-Test-Change-RSA_sign-to-EVP_PKEY_sign.patch
-Patch8:        0008-Require-OpenSSL-1.1.0.patch
-Patch9:        0009-FAPI-Change-SHA256_Update-to-EVP_DigestUpdate.patch
-Patch10:       0010-Test-Use-EVP_MAC_xxx-with-OpenSSL-3.0.patch
-Patch11:       0011-Drop-support-for-OpenSSL-1.1.0.patch
-Patch12:       0012-Implement-EVP_PKEY-export-import-for-OpenSSL-3.0.patch
-Patch13:       0001-esys_crypto_ossl-remove-non-needed-_ex-OSSL-funcs.patch
-Patch14:       0002-FAPI-Remove-useless-code-get_engine.patch
-Patch15:       0003-FAPI-Remove-fauly-free-of-an-unused-field.patch
-Patch16:       0004-Remove-deprecated-OpenSSL_add_all_algorithms.patch
-Patch17:       0005-Use-default-OpenSSL-context-for-internal-crypto-oper.patch
-Patch18:       0006-FAPI-Add-policy-computation-for-create-primary.patch
-Patch19:       0007-FAPI-Fix-loading-of-primary-keys.patch
-Patch20:       0008-Fix-file-descriptor-leak-when-tcti-initialization-fa.patch
-Patch21:       0009-FAPI-Fix-leak-in-fapi-crypto-with-ossl3.patch
-Patch22:       0010-FAPI-Fix-memory-leak-after-ifapi_init_primary_finish.patch
-Patch23:       0011-esys-Return-an-error-if-ESYS_TR_NONE-is-passed-to-Es.patch
-Patch24:       0012-FAPI-Fixed-memory-leak-when-ifapi_get_certificates-f.patch
-Patch25:       0013-FAPI-Free-object-when-keystore_search_obj-failed.patch
-Patch26:       0014-FAPI-Fixed-the-memory-leak-of-command-data-when-Fapi.patch
-Patch27:       0015-ESYS-Fixed-annotation-error-of-Esys_TR_Deserialize.patch
-Patch28:       0016-FAPI-Clean-up-memory-when-Fapi_Delete_Async-failed.patch
-Patch29:       0017-FAPI-Clean-up-memory-when-Fapi_GetEsysBlob_Async-fai.patch
-Patch30:       0018-FAPI-Initialize-object-used-for-keystore-search.patch
-Patch31:       0019-MU-Fix-buffer-upcast-leading-to-misalignment.patch
-Patch32:       0020-esys_iutil-fix-possible-NPD.patch
-Patch33:       0021-sapi-scope-command-handles.patch
-Patch34:       0022-fapi-use-correct-userdata-for-cbauthnv.patch
-Patch35:       0023-SAPI-fix-number-of-handles-for-FlushContext.patch
-
+Source1:       tpm2-tss-systemd-sysusers.conf
+# doxygen patch
+Patch0: tpm2-tss-3.0.0-doxygen.patch
+Patch2: 0001-esys_iutil-fix-possible-NPD.patch
+Patch3: 0001-tss2-rc-fix-unknown-layer-handler-dropping-bits.patch
+Patch4: 0002-MU-Fix-unneeded-size-check-in-TPM2B-unmarshaling.patch
+Patch5: 0003-FAPI-Fix-parameter-encryption-for-provisioning.patch
+Patch6: 0004-FAPI-Fix-missing-parameter-encryption-for-policy-ses.patch
+Patch7: 0005-FAPI-Fix-missing-parameter-encryption-for-some-HMAC-.patch
+Patch8: 0006-FAPI-Fix-usage-of-persistent-handles.patch
+Patch11: 0007-build-Fix-failed-build-with-disable-vendor.patch
+Patch12: 0008-FAPI-Fapi_GetInfo-display-warning-for-SHA3-hash-algs.patch
+Patch13: 0009-FAPI-Skip-provisioning-test-for-nv-ext-and-profile-p.patch
+Patch14: 0010-FAPI-Fix-wrong-allocation-of-pcr-policy.patch
 
 %global udevrules_prefix 60-
 
@@ -62,6 +35,7 @@ BuildRequires: libtool
 BuildRequires: openssl-devel
 BuildRequires: pkgconfig
 BuildRequires: systemd
+BuildRequires: systemd-rpm-macros
 Requires(pre): shadow-utils
 
 %description
@@ -73,9 +47,9 @@ APIs for applications to access TPM module through kernel TPM drivers.
 %autosetup -p1 -n %{name}-%{version}
 
 %build
-autoreconf -i
 # Use built-in tpm-udev.rules, with specified installation path and prefix.
 %configure --disable-static --disable-silent-rules \
+           --disable-tcti-pcap --disable-tcti-libtpms \
            --with-udevrulesdir=%{_udevrulesdir} --with-udevrulesprefix=%{udevrules_prefix} \
            --with-runstatedir=%{_rundir} --with-tmpfilesdir=%{_tmpfilesdir} --with-sysusersdir=%{_sysusersdir}
 
@@ -88,16 +62,11 @@ sed -i 's|^runpath_var=LD_RUN_PATH|runpath_var=DIE_RPATH_DIE|g' libtool
 %install
 %make_install
 find %{buildroot}%{_libdir} -type f -name \*.la -delete
+rm %{buildroot}%{_sysusersdir}/tpm2-tss.conf
+install -p -D -m 0644 %{SOURCE1} %{buildroot}%{_sysusersdir}/tpm2-tss.conf
 
 %pre
-getent group tss >/dev/null || groupadd -f -g 59 -r tss
-if ! getent passwd tss >/dev/null ; then
-    if ! getent passwd 59 >/dev/null ; then
-      useradd -r -u 59 -g tss -d /dev/null -s /sbin/nologin -c "Account used for TPM access" tss
-    else
-      useradd -r -g tss -d /dev/null -s /sbin/nologin -c "Account used for TPM access" tss
-    fi
-fi
+%sysusers_create_compat %{SOURCE1}
 exit 0
 
 %ldconfig_scriptlets
@@ -156,6 +125,18 @@ use tpm2-tss.
 
 
 %changelog
+* Mon Jul 3 2023 Štěpán Horáček <shoracek@redhat.com> - 3.2.2-2
+- Remove misapplied license
+  Resolves: rhbz#2160307
+
+* Fri Jun 23 2023 Štěpán Horáček <shoracek@redhat.com> - 3.2.2-1
+- Rebase to 3.2.2
+- Use systemd-sysusers to create user
+  Resolves: CVE-2023-22745
+  Resolves: rhbz#2095479
+  Resolves: rhbz#2160307
+  Resolves: rhbz#2162613
+
 * Wed Aug 10 2022 Štěpán Horáček <shoracek@redhat.com> - 3.0.3-8
 - Fix memory leaks, potential crashes, upgrade to OpenSSL 3
   Resolves: rhbz#2041919

@@ -1,0 +1,30 @@
+From 12519626a221f0e4c20e66ec101429fc0f321c6f Mon Sep 17 00:00:00 2001
+From: Juergen Repp <juergen_repp@web.de>
+Date: Fri, 12 May 2023 09:30:53 +0200
+Subject: [PATCH 10/10] FAPI: Fix wrong allocation of pcr policy.
+
+The list of pcr registers was was allocated with the wrong size in the
+function copy_policy_element which caused a segfault if more than one
+pcr was used.
+
+Signed-off-by: Juergen Repp <juergen_repp@web.de>
+---
+ src/tss2-fapi/ifapi_helpers.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/tss2-fapi/ifapi_helpers.c b/src/tss2-fapi/ifapi_helpers.c
+index e1c4220b..5c574717 100644
+--- a/src/tss2-fapi/ifapi_helpers.c
++++ b/src/tss2-fapi/ifapi_helpers.c
+@@ -1343,7 +1343,7 @@ copy_policy_element(const TPMT_POLICYELEMENT *from_policy, TPMT_POLICYELEMENT *t
+     case POLICYPCR:
+         to_policy->element.PolicyPCR.pcrs =
+             calloc(1, sizeof(TPML_PCRVALUES) +
+-                   from_policy->element.PolicyPCR.pcrs->count + sizeof(TPMS_PCRVALUE));
++                   from_policy->element.PolicyPCR.pcrs->count * sizeof(TPMS_PCRVALUE));
+         goto_if_null2(to_policy->element.PolicyPCR.pcrs, "Out of memory.",
+                       r, TSS2_FAPI_RC_MEMORY, error);
+         to_policy->element.PolicyPCR.pcrs->count
+-- 
+2.41.0
+
