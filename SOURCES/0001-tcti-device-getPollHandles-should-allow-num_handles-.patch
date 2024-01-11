@@ -1,0 +1,39 @@
+From c42450a294c4267998aa16a477e9218ee5953aa9 Mon Sep 17 00:00:00 2001
+From: Jeffrey Ferreira <jeffpferreira@gmail.com>
+Date: Thu, 19 Sep 2019 13:32:00 -0700
+Subject: [PATCH] tcti-device: getPollHandles should allow num_handles query
+
+Signed-off-by: Jeffrey Ferreira <jeffpferreira@gmail.com>
+---
+ src/tss2-tcti/tcti-device.c | 11 +++++++++--
+ 1 file changed, 9 insertions(+), 2 deletions(-)
+
+diff --git a/src/tss2-tcti/tcti-device.c b/src/tss2-tcti/tcti-device.c
+index 44c9fe2083d5..53a698cad061 100644
+--- a/src/tss2-tcti/tcti-device.c
++++ b/src/tss2-tcti/tcti-device.c
+@@ -368,12 +368,19 @@ tcti_device_get_poll_handles (
+         return TSS2_TCTI_RC_BAD_CONTEXT;
+     }
+ 
+-    if (handles == NULL || num_handles == NULL) {
++    if (num_handles == NULL) {
+         return TSS2_TCTI_RC_BAD_REFERENCE;
+     }
+ 
++    if (handles != NULL && *num_handles < 1) {
++        return TSS2_TCTI_RC_INSUFFICIENT_BUFFER;
++    }
++
+     *num_handles = 1;
+-    handles->fd = tcti_dev->fd;
++    if (handles != NULL) {
++        handles->fd = tcti_dev->fd;
++    }
++
+     return TSS2_RC_SUCCESS;
+ #else
+     (void)(tctiContext);
+-- 
+2.27.0
+

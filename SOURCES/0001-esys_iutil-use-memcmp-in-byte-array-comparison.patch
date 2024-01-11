@@ -1,0 +1,62 @@
+From 0bf42a4489973005ddd912a800dfb92eff2806e8 Mon Sep 17 00:00:00 2001
+From: William Roberts <william.c.roberts@intel.com>
+Date: Mon, 16 Sep 2019 17:12:23 -0700
+Subject: [PATCH] esys_iutil: use memcmp in byte array comparison
+
+Rather than a byte for byte forloop, use memcmp() so the compiler can
+use architectural optimizations.
+
+Signed-off-by: William Roberts <william.c.roberts@intel.com>
+---
+ src/tss2-esys/esys_iutil.c | 27 +++++----------------------
+ 1 file changed, 5 insertions(+), 22 deletions(-)
+
+diff --git a/src/tss2-esys/esys_iutil.c b/src/tss2-esys/esys_iutil.c
+index 94d0332c5b7d..08a9b7dffcbd 100644
+--- a/src/tss2-esys/esys_iutil.c
++++ b/src/tss2-esys/esys_iutil.c
+@@ -35,23 +35,6 @@ cmp_UINT16(const UINT16 * in1, const UINT16 * in2)
+     }
+ }
+ 
+-/**
+- * Compare variables of type BYTE.
+- * @param[in] in1 Variable to be compared with:
+- * @param[in] in2
+- */
+-static bool
+-cmp_BYTE(const BYTE * in1, const BYTE * in2)
+-{
+-    LOG_TRACE("call");
+-    if (*in1 == *in2)
+-        return true;
+-    else {
+-        LOG_TRACE("cmp false");
+-        return false;
+-    }
+-}
+-
+ /**
+  * Compare two arrays of type BYTE.
+  * @param[in] in1 array to be compared with:.
+@@ -65,12 +48,12 @@ cmp_BYTE_array(const BYTE * in1, size_t count1, const BYTE * in2, size_t count2)
+         LOG_TRACE("cmp false");
+         return false;
+     }
+-    for (size_t i = 0; i < count1; i++) {
+-        if (!cmp_BYTE(&in1[i], &in2[i])) {
+-            LOG_TRACE("cmp false");
+-            return false;
+-        }
++
++    if (memcmp(in1, in2, count2) != 0) {
++        LOG_TRACE("cmp false");
++        return false;
+     }
++
+     return true;
+ }
+ 
+-- 
+2.27.0
+

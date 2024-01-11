@@ -1,0 +1,71 @@
+From 58ee0fd916671942e62ac9930f18225761a6dd66 Mon Sep 17 00:00:00 2001
+From: Joe Richey <joerichey@google.com>
+Date: Tue, 21 Jan 2020 20:04:45 -0800
+Subject: [PATCH] mu: Remove use of VLAs for Marshalling TPML types
+
+All of the `Tss2_MU_*_Marshal()` functions have the property that
+`buffer` can be NULL, `offset` can be NULL, but both cannot be
+NULL. Some Marshal functions check this directly (returning
+`TSS2_MU_RC_BAD_REFERENCE` on error), but most do this by composing
+existing Marshalling functions together.
+
+The TMPL Marshal functions does things differently, it creates a local
+VLA `local_buffer[buffer_size]` and uses that as the buffer pointer if
+a NULL buffer is given. This is unnecessary, as this pointer is only
+used for debug logging and passed to other Marshalling functions, which
+will correctly handle a NULL buffer.
+
+Note that the VLA in the existing code is of length `buffer_size` (the
+length of the _entire_ buffer, _not_ the length of the data being
+unmarshaled). This can potentially result in a very large stack
+allocation, or stack overflow.
+
+Signed-off-by: Joe Richey <joerichey@google.com>
+---
+ src/tss2-mu/tpml-types.c | 11 +++--------
+ 1 file changed, 3 insertions(+), 8 deletions(-)
+
+diff --git a/src/tss2-mu/tpml-types.c b/src/tss2-mu/tpml-types.c
+index 9506a26efd14..ae1ed6177d75 100644
+--- a/src/tss2-mu/tpml-types.c
++++ b/src/tss2-mu/tpml-types.c
+@@ -29,8 +29,6 @@ TSS2_RC Tss2_MU_##type##_Marshal(type const *src, uint8_t buffer[], \
+     size_t  local_offset = 0; \
+     UINT32 i, count = 0; \
+     TSS2_RC ret = TSS2_RC_SUCCESS; \
+-    uint8_t *buf_ptr = buffer; \
+-    uint8_t local_buffer[buffer_size]; \
+ \
+     if (offset != NULL) { \
+         LOG_TRACE("offset non-NULL, initial value: %zu", *offset); \
+@@ -60,24 +58,21 @@ TSS2_RC Tss2_MU_##type##_Marshal(type const *src, uint8_t buffer[], \
+         LOG_WARNING("count too big"); \
+         return TSS2_SYS_RC_BAD_VALUE; \
+     } \
+-\
+-    if (buf_ptr == NULL) \
+-        buf_ptr = local_buffer; \
+ \
+     LOG_DEBUG(\
+          "Marshalling " #type " from 0x%" PRIxPTR " to buffer 0x%" PRIxPTR \
+          " at index 0x%zx", \
+          (uintptr_t)&src, \
+-         (uintptr_t)buf_ptr, \
++         (uintptr_t)buffer, \
+          local_offset); \
+ \
+-    ret = Tss2_MU_UINT32_Marshal(src->count, buf_ptr, buffer_size, &local_offset); \
++    ret = Tss2_MU_UINT32_Marshal(src->count, buffer, buffer_size, &local_offset); \
+     if (ret) \
+         return ret; \
+ \
+     for (i = 0; i < src->count; i++) \
+     { \
+-        ret = marshal_func(op src->buf_name[i], buf_ptr, buffer_size, &local_offset); \
++        ret = marshal_func(op src->buf_name[i], buffer, buffer_size, &local_offset); \
+         if (ret) \
+             return ret; \
+     } \
+-- 
+2.27.0
+
