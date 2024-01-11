@@ -1,0 +1,45 @@
+From 7a56b84b5990b07efd30b5bf79331c74d28df954 Mon Sep 17 00:00:00 2001
+From: Imran Desai <imran.desai@intel.com>
+Date: Mon, 22 Mar 2021 16:43:36 -0700
+Subject: [PATCH 3/4] esys_iutil.c: Fix issue where nonceTPM was included twice
+ in hmac
+
+Fixes #2037
+
+TPM2.0 Architecture 19.6.5 Note 7
+
+If the same session (not the first session) is used for decrypt and
+encrypt, its nonceTPM is only used once. If different sessions are
+used for decrypt and encrypt, both nonceTPMs are included.
+
+Signed-off-by: Imran Desai <imran.desai@intel.com>
+---
+ src/tss2-esys/esys_iutil.c | 12 ++++++++++++
+ 1 file changed, 12 insertions(+)
+
+diff --git a/src/tss2-esys/esys_iutil.c b/src/tss2-esys/esys_iutil.c
+index 08a9b7df..1910c570 100644
+--- a/src/tss2-esys/esys_iutil.c
++++ b/src/tss2-esys/esys_iutil.c
+@@ -1265,6 +1265,18 @@ iesys_gen_auths(ESYS_CONTEXT * esys_context,
+                                     &encryptNonce);
+     return_if_error(r, "More than one crypt session");
+ 
++    /*
++     * TPM2.0 Architecture 19.6.5 Note 7
++     *
++     * If the same session (not the first session) is used for decrypt and
++     * encrypt, its nonceTPM is only used once. If different sessions are used
++     * for decrypt and encrypt, both nonceTPMs are included
++     */
++    if (decryptNonceIdx && (decryptNonceIdx == encryptNonceIdx)) {
++        decryptNonceIdx = 0;
++    }
++
++
+     /* Compute cp hash values for command buffer for all used algorithms */
+ 
+     r = iesys_compute_cp_hashtab(esys_context,
+-- 
+2.41.0
+

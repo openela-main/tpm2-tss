@@ -1,6 +1,6 @@
 Name:           tpm2-tss
 Version:        2.3.2
-Release:        4%{?dist}
+Release:        5%{?dist}
 Summary:        TPM2.0 Software Stack
 
 # The entire source code is under BSD except implementation.h and tpmb.h which
@@ -26,6 +26,11 @@ Patch12:        0001-sys-match-counter-variable-type-for-cmdAuthsArray-co.patch
 Patch13:        0001-Return-proper-error-code-on-memory-allocation-failur.patch
 Patch14:        0001-esys-fix-hmac-calculation-for-tpm2_clear-command.patch
 Patch15:        0001-tctildr-remove-the-private-implementation-of-strndup.patch
+Patch16:        0001-tss2_rc-ensure-layer-number-is-in-bounds.patch
+Patch17:        0001-ESYS-Fix-initialization-of-app-data-in-Esys_Initiali.patch
+Patch18:        0002-esys-Shared-secret-calculation-is-not-spec-compliant.patch
+Patch19:        0003-esys_iutil.c-Fix-issue-where-nonceTPM-was-included-t.patch
+Patch20:        0004-ESYS-Fix-buffer-overflow-in-xor-parameter-obfuscatio.patch
 
 %global udevrules_prefix 60-
 
@@ -119,6 +124,11 @@ use tpm2-tss.
 %postun -p /sbin/ldconfig
 
 %changelog
+* Wed Jun 7 2023 Štěpán Horáček <shoracek@redhat.com> - 2.3.2-5
+- Ensure layer number is in bounds
+  Resolves: rhbz#2160302
+  Resolves: rhbz#2162611 
+
 * Tue Apr 20 2021 Jerry Snitselaar <jsnitsel@redhat.com> - 2.3.2-4
 - Fix hmac calculation for tpm2_clear command.
 - Remove private implementation of strndup.
