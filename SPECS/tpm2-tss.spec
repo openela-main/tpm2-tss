@@ -1,6 +1,6 @@
 Name:           tpm2-tss
 Version:        2.3.2
-Release:        5%{?dist}
+Release:        6%{?dist}
 Summary:        TPM2.0 Software Stack
 
 # The entire source code is under BSD except implementation.h and tpmb.h which
@@ -71,9 +71,9 @@ find %{buildroot}%{_libdir} -type f -name \*.la -delete
 getent group tss >/dev/null || groupadd -f -g 59 -r tss
 if ! getent passwd tss >/dev/null ; then
     if ! getent passwd 59 >/dev/null ; then
-      useradd -r -u 59 -g tss -d /dev/null -s /sbin/nologin -c "Account used for TPM access" tss
+      useradd -r -u 59 -g tss -d / -s /sbin/nologin -c "Account used for TPM access" tss
     else
-      useradd -r -g tss -d /dev/null -s /sbin/nologin -c "Account used for TPM access" tss
+      useradd -r -g tss -d / -s /sbin/nologin -c "Account used for TPM access" tss
     fi
 fi
 exit 0
@@ -124,6 +124,10 @@ use tpm2-tss.
 %postun -p /sbin/ldconfig
 
 %changelog
+* Wed Oct 18 2023 Štěpán Horáček <shoracek@redhat.com> - 2.3.2-6
+- Fix home directory of the tss user
+  Related: RHEL-14439
+
 * Wed Jun 7 2023 Štěpán Horáček <shoracek@redhat.com> - 2.3.2-5
 - Ensure layer number is in bounds
   Resolves: rhbz#2160302
