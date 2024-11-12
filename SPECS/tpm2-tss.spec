@@ -1,6 +1,6 @@
 Name:          tpm2-tss
-Version:       3.2.2
-Release:       2%{?dist}
+Version:       3.2.3
+Release:       1%{?dist}
 Summary:       TPM2.0 Software Stack
 
 License:       BSD
@@ -10,16 +10,6 @@ Source1:       tpm2-tss-systemd-sysusers.conf
 # doxygen patch
 Patch0: tpm2-tss-3.0.0-doxygen.patch
 Patch2: 0001-esys_iutil-fix-possible-NPD.patch
-Patch3: 0001-tss2-rc-fix-unknown-layer-handler-dropping-bits.patch
-Patch4: 0002-MU-Fix-unneeded-size-check-in-TPM2B-unmarshaling.patch
-Patch5: 0003-FAPI-Fix-parameter-encryption-for-provisioning.patch
-Patch6: 0004-FAPI-Fix-missing-parameter-encryption-for-policy-ses.patch
-Patch7: 0005-FAPI-Fix-missing-parameter-encryption-for-some-HMAC-.patch
-Patch8: 0006-FAPI-Fix-usage-of-persistent-handles.patch
-Patch11: 0007-build-Fix-failed-build-with-disable-vendor.patch
-Patch12: 0008-FAPI-Fapi_GetInfo-display-warning-for-SHA3-hash-algs.patch
-Patch13: 0009-FAPI-Skip-provisioning-test-for-nv-ext-and-profile-p.patch
-Patch14: 0010-FAPI-Fix-wrong-allocation-of-pcr-policy.patch
 
 %global udevrules_prefix 60-
 
@@ -125,6 +115,10 @@ use tpm2-tss.
 
 
 %changelog
+* Thu May 30 2024 Štěpán Horáček <shoracek@redhat.com> - 3.2.3-1
+- Rebase to 3.2.3
+  Resolves: RHEL-23206
+
 * Mon Jul 3 2023 Štěpán Horáček <shoracek@redhat.com> - 3.2.2-2
 - Remove misapplied license
   Resolves: rhbz#2160307
