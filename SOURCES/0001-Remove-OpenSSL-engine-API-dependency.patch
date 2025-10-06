@@ -1,0 +1,81 @@
+From e9d4ab91da392ad855e2c54ad437356ccc2ad24c Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?=C5=A0t=C4=9Bp=C3=A1n=20Hor=C3=A1=C4=8Dek?=
+ <shoracek@redhat.com>
+Date: Tue, 8 Oct 2024 16:36:21 +0200
+Subject: [PATCH] Remove OpenSSL engine API dependency
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Signed-off-by: Štěpán Horáček <shoracek@redhat.com>
+---
+ src/tss2-esys/esys_crypto_ossl.c                               | 1 -
+ test/integration/fapi-data-crypt.int.c                         | 1 -
+ test/integration/fapi-ext-public-key.int.c                     | 1 -
+ test/integration/fapi-key-create-policy-signed-keyedhash.int.c | 1 -
+ test/integration/fapi-key-create-policy-signed.int.c           | 1 -
+ 5 files changed, 5 deletions(-)
+
+diff --git a/src/tss2-esys/esys_crypto_ossl.c b/src/tss2-esys/esys_crypto_ossl.c
+index 1620788c..b990f6e3 100644
+--- a/src/tss2-esys/esys_crypto_ossl.c
++++ b/src/tss2-esys/esys_crypto_ossl.c
+@@ -19,7 +19,6 @@
+ #include <openssl/params.h>
+ #include <openssl/param_build.h>
+ #endif
+-#include <openssl/engine.h>
+ #include <stdio.h>
+ 
+ #include "tss2_esys.h"
+diff --git a/test/integration/fapi-data-crypt.int.c b/test/integration/fapi-data-crypt.int.c
+index 07437b62..cc0dfd62 100644
+--- a/test/integration/fapi-data-crypt.int.c
++++ b/test/integration/fapi-data-crypt.int.c
+@@ -15,7 +15,6 @@
+ 
+ #include <openssl/evp.h>
+ #include <openssl/rsa.h>
+-#include <openssl/engine.h>
+ #include <openssl/pem.h>
+ 
+ #include "tss2_fapi.h"
+diff --git a/test/integration/fapi-ext-public-key.int.c b/test/integration/fapi-ext-public-key.int.c
+index 787a6c9c..5d30d2c1 100644
+--- a/test/integration/fapi-ext-public-key.int.c
++++ b/test/integration/fapi-ext-public-key.int.c
+@@ -11,7 +11,6 @@
+ #include <openssl/evp.h>
+ #include <openssl/aes.h>
+ #include <openssl/rsa.h>
+-#include <openssl/engine.h>
+ #include <openssl/pem.h>
+ #include <stdio.h>
+ #include <stddef.h>
+diff --git a/test/integration/fapi-key-create-policy-signed-keyedhash.int.c b/test/integration/fapi-key-create-policy-signed-keyedhash.int.c
+index f9f4131d..d65ea10b 100644
+--- a/test/integration/fapi-key-create-policy-signed-keyedhash.int.c
++++ b/test/integration/fapi-key-create-policy-signed-keyedhash.int.c
+@@ -17,7 +17,6 @@
+ 
+ #include <openssl/evp.h>
+ #include <openssl/hmac.h>
+-#include <openssl/engine.h>
+ #include <openssl/pem.h>
+ 
+ #include "tss2_fapi.h"
+diff --git a/test/integration/fapi-key-create-policy-signed.int.c b/test/integration/fapi-key-create-policy-signed.int.c
+index d20554aa..0eb848e9 100644
+--- a/test/integration/fapi-key-create-policy-signed.int.c
++++ b/test/integration/fapi-key-create-policy-signed.int.c
+@@ -17,7 +17,6 @@
+ 
+ #include <openssl/evp.h>
+ #include <openssl/rsa.h>
+-#include <openssl/engine.h>
+ #include <openssl/pem.h>
+ 
+ #include "tss2_fapi.h"
+-- 
+2.46.2
+
