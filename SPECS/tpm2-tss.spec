@@ -5,7 +5,7 @@
 
 Name:          tpm2-tss
 Version:       4.1.3
-Release:       5%{?candidate:.%{candidate}}%{?dist}
+Release:       6%{?candidate:.%{candidate}}%{?dist}
 Summary:       TPM2.0 Software Stack
 
 # The entire source code is under BSD except implementation.h and tpmb.h which
@@ -17,15 +17,35 @@ Source1:       tpm2-tss-systemd-sysusers.conf
 # doxygen crash
 Patch0:        tpm2-tss-3.0.0-doxygen.patch
 Patch1:        0001-Remove-OpenSSL-engine-API-dependency.patch
+Patch101: 0001-ESYS-FAPI-Fix-order-of-calloc-parameters.patch
+Patch102: 0002-FAPI-Add-check-whether-auth-values-exist-for-hierarc.patch
+Patch103: 0003-FAPI-Improve-the-error-message-for-self-signed-EK-ce.patch
+Patch104: 0004-TCTI-Fix-leak-produced-in-Tss2_TctiLdr_Initialize_Ex.patch
+Patch105: 0005-FAPI-Fix-usage-of-external-PEM-keys-for-PolicyAuthor.patch
+Patch106: 0006-FAPI-Fix-wrong-format-directive-in-ifap_set_auth.patch
+Patch107: 0007-fapi-fix-PolicyTemplate-policyDigest-calculation.patch
+Patch108: 0008-FAPI-Fix-unnecessary-writes-to-keystore.patch
+Patch109: 0009-FAPI-Fix-segfault-if-json-field-is-null.patch
+Patch110: 0010-FAPI-Fix-Fapi_ChangeAuth-for-keys.patch
+Patch111: 0011-tcti-msim-Fix-call-of-socket_xmit_buf-in-send_sim_se.patch
+Patch112: 0012-FAPI-Fix-missing-scanf-checks.patch
+Patch113: 0013-FAPI-Fix-Local-variable-address-stored-in-non-local-.patch
+Patch114: 0014-FAPI-Fix-misleading-error-message.patch
+Patch115: 0015-FAPI-Fix-file-io-if-d_type-of-dirent-is-not-supporte.patch
+Patch116: 0016-SAPI-Allow-state-CMD_STAGE_SEND_COMMAND-for-Tss2_Sys.patch
+Patch117: 0017-FAPI-Add-missing-EFI-events.patch
+Patch118: 0018-FAPI-Add-Intel-ODCA-Root-Certificate.patch
+Patch120: 0020-FAPI-Fix-leak-in-Fapi_Sign.patch
+Patch121: 0021-FAPI-Fix-instantiation-of-policyduplication-select.patch
+Patch122: 0022-FAPI-Fix-nv-object-authorization-for-policy-authoriz.patch
+
 
 %global udevrules_prefix 60-
 
-%if %{with rc}
 BuildRequires: autoconf
 BuildRequires: autoconf-archive
 BuildRequires: automake
 BuildRequires: libtool
-%endif
 BuildRequires: make
 BuildRequires: doxygen
 BuildRequires: gcc
@@ -155,6 +175,10 @@ use tpm2-tss.
 
 
 %changelog
+* Fri Sep 5 2025 Štěpán Horáček <shoracek@redhat.com> - 4.1.3-6
+- Backport upstream fixes
+  Resolves: RHEL-94936
+
 * Tue Oct 29 2024 Troy Dawson <tdawson@redhat.com> - 4.1.3-5
 - Bump release for October 2024 mass rebuild:
   Resolves: RHEL-64018

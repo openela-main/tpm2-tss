@@ -1,0 +1,67 @@
+From 2af808f554a815e20482d9405ff3f9f36539c428 Mon Sep 17 00:00:00 2001
+From: Juergen Repp <juergen_repp@web.de>
+Date: Sat, 25 Jan 2025 12:25:20 +0100
+Subject: [PATCH 16/22] SAPI: Allow state CMD_STAGE_SEND_COMMAND for
+ Tss2_Sys_GetCpBuffer.
+
+The CP buffer should still be available before Tss2_ExecuteFinish is
+called.
+
+Signed-off-by: Juergen Repp <juergen_repp@web.de>
+---
+ src/tss2-sys/api/Tss2_Sys_GetCpBuffer.c |  2 +-
+ test/tpmclient/tpmclient.int.c          | 18 +++++++++---------
+ 2 files changed, 10 insertions(+), 10 deletions(-)
+
+diff --git a/src/tss2-sys/api/Tss2_Sys_GetCpBuffer.c b/src/tss2-sys/api/Tss2_Sys_GetCpBuffer.c
+index d054ac45..7b227789 100644
+--- a/src/tss2-sys/api/Tss2_Sys_GetCpBuffer.c
++++ b/src/tss2-sys/api/Tss2_Sys_GetCpBuffer.c
+@@ -22,7 +22,7 @@ TSS2_RC Tss2_Sys_GetCpBuffer(
+     if (!ctx || !cpBufferUsedSize || !cpBuffer)
+         return TSS2_SYS_RC_BAD_REFERENCE;
+ 
+-    if (ctx->previousStage != CMD_STAGE_PREPARE)
++    if (ctx->previousStage != CMD_STAGE_PREPARE && ctx->previousStage != CMD_STAGE_SEND_COMMAND)
+         return TSS2_SYS_RC_BAD_SEQUENCE;
+ 
+     *cpBuffer = ctx->cpBuffer;
+diff --git a/test/tpmclient/tpmclient.int.c b/test/tpmclient/tpmclient.int.c
+index 537050d2..25965d34 100644
+--- a/test/tpmclient/tpmclient.int.c
++++ b/test/tpmclient/tpmclient.int.c
+@@ -2101,14 +2101,7 @@ retry:
+     rval = Tss2_Sys_SetDecryptParam( sysContext, 10, (uint8_t *)4 );
+     CheckFailed( rval, TSS2_SYS_RC_BAD_SEQUENCE ); /* #12 */
+ 
+-    /*
+-     * NOTE: Stick test for BAD_SEQUENCE for GetCpBuffer here, just
+-     * because it's easier to do this way.
+-     */
+-    rval = Tss2_Sys_GetCpBuffer( sysContext, (size_t *)4, &cpBuffer );
+-    CheckFailed( rval, TSS2_SYS_RC_BAD_SEQUENCE ); /* #13 */
+-
+-    /*
++     /*
+      * Now finish the write command so that TPM isn't stuck trying
+      * to send a response.
+      */
+@@ -2117,7 +2110,14 @@ retry:
+         LOG_INFO ("got TPM2_RC_RETRY, trying again");
+         goto retry;
+     }
+-    CheckPassed( rval ); /* #14 */
++    CheckPassed( rval ); /* #13 */
++
++    /*
++     * NOTE: Stick test for BAD_SEQUENCE for GetCpBuffer here, just
++     * because it's easier to do this way.
++     */
++    rval = Tss2_Sys_GetCpBuffer( sysContext, (size_t *)4, &cpBuffer );
++    CheckFailed( rval, TSS2_SYS_RC_BAD_SEQUENCE ); /* #14 */
+ 
+     /* Test GetEncryptParam for no encrypt param case. */
+     rval = Tss2_Sys_GetEncryptParam( sysContext, &encryptParamSize, &encryptParamBuffer );
+-- 
+2.51.0
+

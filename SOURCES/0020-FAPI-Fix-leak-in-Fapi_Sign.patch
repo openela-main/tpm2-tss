@@ -1,0 +1,29 @@
+From 5a69b211ed087e9b2e2eaa36d411cb54b2a3fd6c Mon Sep 17 00:00:00 2001
+From: Juergen Repp <juergen_repp@web.de>
+Date: Mon, 2 Jun 2025 14:40:03 +0200
+Subject: [PATCH 20/22] FAPI: Fix leak in Fapi_Sign
+
+Fapi_Sign causes a memory leak when the optional public key output parameter
+is not provided. Fixes: #2962
+
+Signed-off-by: Juergen Repp <juergen_repp@web.de>
+---
+ src/tss2-fapi/api/Fapi_Sign.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/tss2-fapi/api/Fapi_Sign.c b/src/tss2-fapi/api/Fapi_Sign.c
+index 52b3c9c6..2ec43172 100644
+--- a/src/tss2-fapi/api/Fapi_Sign.c
++++ b/src/tss2-fapi/api/Fapi_Sign.c
+@@ -296,7 +296,7 @@ Fapi_Sign_Finish(
+             /* Perform the signing operation using a helper. */
+             r = ifapi_key_sign(context, command->key_object,
+                     command->padding, &command->digest, &command->tpm_signature,
+-                    &command->publicKey,
++                    publicKey ? &command->publicKey : NULL,
+                     (certificate) ? &command->certificate : NULL);
+             return_try_again(r);
+             goto_if_error(r, "Fapi sign.", cleanup);
+-- 
+2.51.0
+

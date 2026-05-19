@@ -1,0 +1,34 @@
+From 90d20f92a0da1e1d783419928a43fa850e2f9533 Mon Sep 17 00:00:00 2001
+From: Juergen Repp <juergen_repp@web.de>
+Date: Sat, 18 May 2024 20:21:14 +0200
+Subject: [PATCH 04/22] TCTI: Fix leak produced in Tss2_TctiLdr_Initialize_Ex
+
+The return code of tctildr_init_context_data was not checked in
+Tss2_TctiLdr_Initialize_Ex. The cleanup part of this function was
+not executed and so a leak was produced.
+Fixes #2842
+
+Signed-off-by: Juergen Repp <juergen_repp@web.de>
+---
+ src/tss2-tcti/tctildr.c | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
+
+diff --git a/src/tss2-tcti/tctildr.c b/src/tss2-tcti/tctildr.c
+index 4f380ceb..af913193 100644
+--- a/src/tss2-tcti/tctildr.c
++++ b/src/tss2-tcti/tctildr.c
+@@ -524,7 +524,10 @@ Tss2_TctiLdr_Initialize_Ex (const char *name,
+     }
+ 
+     *tctiContext = (TSS2_TCTI_CONTEXT *) ldr_ctx;
+-    return tctildr_init_context_data(*tctiContext, local_name, local_conf);
++    rc = tctildr_init_context_data(*tctiContext, local_name, local_conf);
++    if (rc == TSS2_RC_SUCCESS) {
++        return rc;
++    }
+ 
+ err:
+     if (*tctiContext != NULL) {
+-- 
+2.51.0
+

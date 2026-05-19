@@ -1,0 +1,48 @@
+From 67d21f1c0b66b802230a4710d056759d3c707e11 Mon Sep 17 00:00:00 2001
+From: Juergen Repp <juergen_repp@web.de>
+Date: Mon, 2 Dec 2024 20:33:43 +0100
+Subject: [PATCH 11/22] tcti-msim: Fix call of socket_xmit_buf in
+ send_sim_session_end.
+
+* socket_xmit_buf was not called after successful marshalling.
+* The result of the write function was not set in the wrapper function for
+  write in the teardown function.
+
+Fixes: #2915
+
+Signed-off-by: Juergen Repp <juergen_repp@web.de>
+---
+ src/tss2-tcti/tcti-mssim.c | 2 +-
+ test/unit/tcti-mssim.c     | 3 +++
+ 2 files changed, 4 insertions(+), 1 deletion(-)
+
+diff --git a/src/tss2-tcti/tcti-mssim.c b/src/tss2-tcti/tcti-mssim.c
+index a0afa9fd..cf6f4208 100644
+--- a/src/tss2-tcti/tcti-mssim.c
++++ b/src/tss2-tcti/tcti-mssim.c
+@@ -134,7 +134,7 @@ send_sim_session_end (
+     TSS2_RC rc;
+ 
+     rc = Tss2_MU_UINT32_Marshal (TPM_SESSION_END, buf, sizeof (buf), NULL);
+-    if (rc == TSS2_RC_SUCCESS) {
++    if (rc != TSS2_RC_SUCCESS) {
+         return rc;
+     }
+     return socket_xmit_buf (sock, buf, sizeof (buf));
+diff --git a/test/unit/tcti-mssim.c b/test/unit/tcti-mssim.c
+index bafcb743..90e97c5f 100644
+--- a/test/unit/tcti-mssim.c
++++ b/test/unit/tcti-mssim.c
+@@ -337,6 +337,9 @@ tcti_socket_teardown (void **state)
+ {
+     TSS2_TCTI_CONTEXT *ctx = (TSS2_TCTI_CONTEXT*)*state;
+ 
++    will_return (__wrap_write, 4);
++    will_return (__wrap_write, 4);
++
+     Tss2_Tcti_Finalize (ctx);
+     free (ctx);
+     return 0;
+-- 
+2.51.0
+

@@ -1,0 +1,50 @@
+From 4be439941693b223244ef5fd33a46e80861a429c Mon Sep 17 00:00:00 2001
+From: Juergen Repp <juergen_repp@web.de>
+Date: Wed, 31 Jul 2024 22:37:07 +0200
+Subject: [PATCH 09/22] FAPI: Fix segfault if json field is null.
+
+The function json_object_object_get_ex does not create a
+json object for the parameter value in the case "key":null.
+This caused a segfault in json deserialization.
+Fixes: #2878
+
+Signed-off-by: Juergen Repp <juergen_repp@web.de>
+---
+ src/tss2-fapi/tpm_json_deserialize.c | 16 ++++++++++++++--
+ 1 file changed, 14 insertions(+), 2 deletions(-)
+
+diff --git a/src/tss2-fapi/tpm_json_deserialize.c b/src/tss2-fapi/tpm_json_deserialize.c
+index 1b27a83f..02a72592 100644
+--- a/src/tss2-fapi/tpm_json_deserialize.c
++++ b/src/tss2-fapi/tpm_json_deserialize.c
+@@ -231,13 +231,25 @@ ifapi_get_sub_object(json_object *jso, char *name, json_object **sub_jso)
+ {
+     int i;
+     if (json_object_object_get_ex(jso, name, sub_jso)) {
+-        return true;
++        if (*sub_jso) {
++            return true;
++        } else {
++            return false;
++        }
+     } else {
+         char name2[strlen(name) + 1];
+         for (i = 0; name[i]; i++)
+             name2[i] = tolower(name[i]);
+         name2[strlen(name)] = '\0';
+-        return json_object_object_get_ex(jso, name2, sub_jso);
++        if (json_object_object_get_ex(jso, name2, sub_jso)) {
++            if (*sub_jso) {
++                return true;
++            } else {
++                return false;
++            }
++        } else {
++            return false;
++        }
+     }
+ }
+ 
+-- 
+2.51.0
+

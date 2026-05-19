@@ -1,0 +1,40 @@
+From 00d96269ac8797317f07b8e362c59f315ccb70b0 Mon Sep 17 00:00:00 2001
+From: Juergen Repp <juergen_repp@web.de>
+Date: Tue, 29 Jul 2025 07:28:20 +0200
+Subject: [PATCH 21/22] FAPI: Fix instantiation of policyduplication select.
+
+The instantiation of the policy did only work when a object path was used
+in the policy definition. Now also the object name or the public data
+of the object can be used.
+
+Signed-off-by: Juergen Repp <juergen_repp@web.de>
+---
+ src/tss2-fapi/ifapi_policy_instantiate.c | 9 +++++++++
+ 1 file changed, 9 insertions(+)
+
+diff --git a/src/tss2-fapi/ifapi_policy_instantiate.c b/src/tss2-fapi/ifapi_policy_instantiate.c
+index 014d4166..f6ada249 100644
+--- a/src/tss2-fapi/ifapi_policy_instantiate.c
++++ b/src/tss2-fapi/ifapi_policy_instantiate.c
+@@ -333,9 +333,18 @@ ifapi_policyeval_instantiate_finish(
+             break;
+ 
+         case POLICYDUPLICATIONSELECT:
++            if  (pol_element->element.PolicyDuplicationSelect.newParentName.size) {
++                break;
++            }
+             if (pol_element->element.PolicyDuplicationSelect.newParentPublic.type) {
+                 /* public data is already set in policy. Path will not be needed. */
+                 SAFE_FREE(pol_element->element.PolicyDuplicationSelect.newParentPath);
++                r = ifapi_get_name(
++                     &pol_element->element.PolicyDuplicationSelect.newParentPublic,
++                     &pol_element->element.PolicyDuplicationSelect.newParentName);
++                return_if_error(r, "Compute object name");
++
++                pol_element->element.PolicyDuplicationSelect.newParentPublic.type = 0;
+                 break;
+             }
+ 
+-- 
+2.51.0
+

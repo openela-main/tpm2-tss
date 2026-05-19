@@ -1,0 +1,65 @@
+From 134aba7994e6a8d799d38cbe1090581f7a8d7903 Mon Sep 17 00:00:00 2001
+From: Juergen Repp <juergen_repp@web.de>
+Date: Mon, 17 Feb 2025 19:50:07 +0100
+Subject: [PATCH 17/22] FAPI: Add missing EFI events.
+
+Now all events which are implemented in the tpm2 tool command
+tpm2_eventlog are implemented in FAPI.
+
+Signed-off-by: Juergen Repp <juergen_repp@web.de>
+---
+ src/tss2-fapi/efi_event.h                     | 3 +++
+ src/tss2-fapi/ifapi_json_eventlog_serialize.c | 9 +++++++++
+ 2 files changed, 12 insertions(+)
+
+diff --git a/src/tss2-fapi/efi_event.h b/src/tss2-fapi/efi_event.h
+index 7c6b9184..b602b06d 100644
+--- a/src/tss2-fapi/efi_event.h
++++ b/src/tss2-fapi/efi_event.h
+@@ -43,6 +43,9 @@
+ #define EV_EFI_ACTION                    EV_EFI_EVENT_BASE + 0x7
+ #define EV_EFI_PLATFORM_FIRMWARE_BLOB    EV_EFI_EVENT_BASE + 0x8
+ #define EV_EFI_HANDOFF_TABLES            EV_EFI_EVENT_BASE + 0x9
++#define EV_EFI_PLATFORM_FIRMWARE_BLOB2   EV_EFI_EVENT_BASE + 0xa
++#define EV_EFI_HANDOFF_TABLES2           EV_EFI_EVENT_BASE + 0xb
++#define EV_EFI_VARIABLE_BOOT2            EV_EFI_EVENT_BASE + 0xc
+ #define EV_EFI_HCRTM_EVENT               EV_EFI_EVENT_BASE + 0x10
+ #define EV_EFI_VARIABLE_AUTHORITY        EV_EFI_EVENT_BASE + 0xe0
+ 
+diff --git a/src/tss2-fapi/ifapi_json_eventlog_serialize.c b/src/tss2-fapi/ifapi_json_eventlog_serialize.c
+index c875568c..b4abeb19 100644
+--- a/src/tss2-fapi/ifapi_json_eventlog_serialize.c
++++ b/src/tss2-fapi/ifapi_json_eventlog_serialize.c
+@@ -124,6 +124,13 @@ char const *eventtype_to_string (UINT32 event_type) {
+         return "EV_EFI_HCRTM_EVENT";
+     case EV_EFI_VARIABLE_AUTHORITY:
+         return "EV_EFI_VARIABLE_AUTHORITY";
++    case EV_EFI_PLATFORM_FIRMWARE_BLOB2:
++        return "EV_EFI_PLATFORM_FIRMWARE_BLOB2";
++    case EV_EFI_HANDOFF_TABLES2:
++        return "EV_EFI_HANDOFF_TABLES2";
++    case EV_EFI_VARIABLE_BOOT2:
++        return "EV_EFI_VARIABLE_BOOT2";
++
+     default:
+         return "Unknown event type";
+     }
+@@ -341,6 +348,7 @@ TSS2_RC ifapi_json_TCG_EVENT2_serialize(const TCG_EVENT2 *in, UINT32 event_type,
+     /* TCG PC Client FPF section 9.2.6 */
+     case EV_EFI_VARIABLE_DRIVER_CONFIG:
+     case EV_EFI_VARIABLE_BOOT:
++    case EV_EFI_VARIABLE_BOOT2:
+     case EV_EFI_VARIABLE_AUTHORITY:
+         {
+ #if (MAXLOGLEVEL != LOGL_NONE)
+@@ -389,6 +397,7 @@ TSS2_RC ifapi_json_TCG_EVENT2_serialize(const TCG_EVENT2 *in, UINT32 event_type,
+     /* TCG PC Client FPF section 9.2.5 */
+     case EV_S_CRTM_CONTENTS:
+     case EV_EFI_PLATFORM_FIRMWARE_BLOB:
++    case EV_EFI_PLATFORM_FIRMWARE_BLOB2:
+         {
+             UEFI_PLATFORM_FIRMWARE_BLOB *data =
+                 (UEFI_PLATFORM_FIRMWARE_BLOB*)in->Event;
+-- 
+2.51.0
+

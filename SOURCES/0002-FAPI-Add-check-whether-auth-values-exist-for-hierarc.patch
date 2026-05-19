@@ -1,0 +1,87 @@
+From 86ff2ee77eb19558e8ae133ad78dcd2d6f59eef1 Mon Sep 17 00:00:00 2001
+From: Juergen Repp <juergen_repp@web.de>
+Date: Fri, 3 May 2024 11:57:43 +0200
+Subject: [PATCH 02/22] FAPI: Add check whether auth values exist for
+ hierarchies.
+
+Currently FAPI provisioning tries to create the EK and SRK with the
+NULL auth value for the hierarchies.
+Now first the corresponding flag in  TPM2_CAP_TPM_PROPERTIES with
+the property TPM2_PT_PERMANENT is checked. If an auth value is used
+for the hierarchy the auth value callback will be called.
+The "retry" code in the BAD_AUTH case is removed.
+
+Signed-off-by: Juergen Repp <juergen_repp@web.de>
+---
+ src/tss2-fapi/api/Fapi_Provision.c | 10 ++++++++++
+ src/tss2-fapi/fapi_util.c          | 32 +-----------------------------
+ 2 files changed, 11 insertions(+), 31 deletions(-)
+
+diff --git a/src/tss2-fapi/api/Fapi_Provision.c b/src/tss2-fapi/api/Fapi_Provision.c
+index 3046b90b..87e0f505 100644
+--- a/src/tss2-fapi/api/Fapi_Provision.c
++++ b/src/tss2-fapi/api/Fapi_Provision.c
+@@ -512,6 +512,16 @@ Fapi_Provision_Finish(FAPI_CONTEXT *context)
+             command->auth_state =  (*capabilityData)->data.tpmProperties.tpmProperty[0].value;
+             SAFE_FREE(*capabilityData);
+ 
++            if (command->auth_state & TPMA_PERMANENT_ENDORSEMENTAUTHSET) {
++                hierarchy_he->misc.hierarchy.with_auth = TPM2_YES;
++            }
++            if (command->auth_state & TPMA_PERMANENT_OWNERAUTHSET) {
++                hierarchy_hs->misc.hierarchy.with_auth = TPM2_YES;
++            }
++            if (command->auth_state & TPMA_PERMANENT_LOCKOUTAUTHSET) {
++                hierarchy_lockout->misc.hierarchy.with_auth = TPM2_YES;
++            }
++
+             /* Check the TPM capabilities for the persistent handle. */
+             if (command->public_templ.persistent_handle) {
+                 r = Esys_GetCapability_Async(context->esys,
+diff --git a/src/tss2-fapi/fapi_util.c b/src/tss2-fapi/fapi_util.c
+index 82d0d0fa..740d5e4a 100644
+--- a/src/tss2-fapi/fapi_util.c
++++ b/src/tss2-fapi/fapi_util.c
+@@ -760,38 +760,8 @@ ifapi_init_primary_finish(FAPI_CONTEXT *context, TSS2_KEY_TYPE ktype, IFAPI_OBJE
+         if (base_rc(r) == TSS2_BASE_RC_TRY_AGAIN)
+             return TSS2_FAPI_RC_TRY_AGAIN;
+ 
+-        /* Retry with authorization callback after trial with null auth */
+-        if (number_rc(r) == TPM2_RC_BAD_AUTH
+-            && hierarchy->misc.hierarchy.with_auth == TPM2_NO) {
+-            char *description;
+-            r = ifapi_get_description(hierarchy, &description);
+-            return_if_error(r, "Get description");
++        goto_if_error_reset_state(r, "FAPI Provision", error_cleanup);
+ 
+-            r = ifapi_set_auth(context, hierarchy, description);
+-            SAFE_FREE(description);
+-            goto_if_error_reset_state(r, "CreatePrimary", error_cleanup);
+-
+-            r = Esys_CreatePrimary_Async(context->esys, hierarchy->public.handle,
+-                                         (context->session1 == ESYS_TR_NONE) ?
+-                                         ESYS_TR_PASSWORD : context->session1,
+-                                         ESYS_TR_NONE, ESYS_TR_NONE,
+-                                         &context->cmd.Provision.inSensitive,
+-                                         &context->cmd.Provision.public_templ.public,
+-                                         &context->cmd.Provision.outsideInfo,
+-                                         &context->cmd.Provision.creationPCR);
+-            goto_if_error_reset_state(r, "CreatePrimary", error_cleanup);
+-
+-            if (ktype == TSS2_EK) {
+-                context->state = PROVISION_AUTH_EK_AUTH_SENT;
+-            } else {
+-                context->state = PROVISION_AUTH_SRK_AUTH_SENT;
+-            }
+-            hierarchy->misc.hierarchy.with_auth = TPM2_YES;
+-            return TSS2_FAPI_RC_TRY_AGAIN;
+-
+-        } else {
+-            goto_if_error_reset_state(r, "FAPI Provision", error_cleanup);
+-        }
+         /* Set EK or SRK handle in context. */
+         if (ktype == TSS2_EK) {
+             context->ek_handle = primaryHandle;
+-- 
+2.51.0
+

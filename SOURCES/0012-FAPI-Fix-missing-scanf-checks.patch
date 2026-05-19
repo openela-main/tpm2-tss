@@ -1,0 +1,42 @@
+From 159d5cfc8058fa654d614d8108919806dca091b5 Mon Sep 17 00:00:00 2001
+From: Juergen Repp <juergen_repp@web.de>
+Date: Sat, 19 Oct 2024 13:21:20 +0200
+Subject: [PATCH 12/22] FAPI: Fix missing scanf checks.
+
+In several cases the return value of scanf was not checked.
+Thus afterwards acces to variables not initialized was possible.
+
+Signed-off-by: Juergen Repp <juergen_repp@web.de>
+---
+ src/tss2-fapi/ifapi_helpers.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/src/tss2-fapi/ifapi_helpers.c b/src/tss2-fapi/ifapi_helpers.c
+index bd6e2dab..a651af42 100644
+--- a/src/tss2-fapi/ifapi_helpers.c
++++ b/src/tss2-fapi/ifapi_helpers.c
+@@ -84,8 +84,8 @@ ifapi_set_key_flags(const char *type, bool policy, IFAPI_KEY_TEMPLATE *template)
+         } else if (strcasecmp(flag, "noda") == 0) {
+             attributes |= TPMA_OBJECT_NODA;
+         } else if (strncmp(flag, "0x", 2) == 0) {
+-            sscanf(&flag[2], "%"SCNx32 "%n", &handle, &pos);
+-            if ((size_t)pos != strlen(flag) - 2) {
++            if (sscanf(&flag[2], "%"SCNx32 "%n", &handle, &pos) < 1 ||
++                (size_t)pos != strlen(flag) - 2) {
+                 goto_error(r, TSS2_FAPI_RC_BAD_VALUE, "Invalid flag: %s",
+                            error, flag);
+             }
+@@ -181,8 +181,8 @@ ifapi_set_nv_flags(const char *type, IFAPI_NV_TEMPLATE *template,
+         } else if (strcasecmp(flag, "noda") == 0) {
+             attributes |= TPMA_NV_NO_DA;
+         } else if (strncmp(flag, "0x", 2) == 0) {
+-            sscanf(&flag[2], "%"SCNx32 "%n", &handle, &pos);
+-            if ((size_t)pos != strlen(flag) - 2) {
++            if (sscanf(&flag[2], "%"SCNx32 "%n", &handle, &pos) < 1 ||
++                (size_t)pos != strlen(flag) - 2) {
+                 goto_error(r, TSS2_FAPI_RC_BAD_VALUE, "Invalid flag: %s",
+                            error, flag);
+             }
+-- 
+2.51.0
+

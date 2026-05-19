@@ -1,0 +1,29 @@
+From 4f0a1fa7055652a93fb49b4960b074d40656fb30 Mon Sep 17 00:00:00 2001
+From: Juergen Repp <juergen_repp@web.de>
+Date: Wed, 11 Dec 2024 12:30:40 +0100
+Subject: [PATCH 14/22] FAPI: Fix misleading error message.
+
+The error message "key not found" was misleading for the case when
+a NV object was not found.
+
+Signed-off-by: Juergen Repp <juergen_repp@web.de>
+---
+ src/tss2-fapi/ifapi_keystore.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/tss2-fapi/ifapi_keystore.c b/src/tss2-fapi/ifapi_keystore.c
+index 8d47b1e8..293df979 100644
+--- a/src/tss2-fapi/ifapi_keystore.c
++++ b/src/tss2-fapi/ifapi_keystore.c
+@@ -1158,7 +1158,7 @@ keystore_search_obj(
+     statecase(keystore->key_search.state, KSEARCH_SEARCH_OBJECT)
+         /* Use the next object in the path list */
+         if (keystore->key_search.path_idx == 0) {
+-            goto_error(r, TSS2_FAPI_RC_PATH_NOT_FOUND, "Key not found.", cleanup);
++            goto_error(r, TSS2_FAPI_RC_PATH_NOT_FOUND, "Key or NV object not found.", cleanup);
+         }
+         keystore->key_search.path_idx -= 1;
+         path_idx = keystore->key_search.path_idx;
+-- 
+2.51.0
+

@@ -1,0 +1,74 @@
+From 17802f7911562779830daa4cb49dbb07a94964ac Mon Sep 17 00:00:00 2001
+From: Juergen Repp <juergen_repp@web.de>
+Date: Sun, 2 Jun 2024 14:28:18 +0200
+Subject: [PATCH 05/22] FAPI: Fix usage of external PEM keys for
+ PolicyAuthorize.
+
+* PolicyAuthorize with an external imported PEM key did not work if
+  the default nameAlg for the imported key (sha1) was not equal to
+  the default nameAlg in the current fapi profile.
+  The nameAlg from the profile is now used for the imported key.
+* To prevent a possible double free after cleanup of a policy
+  the NULL pointer is set for the reference to this policy.
+
+Signed-off-by: Juergen Repp <juergen_repp@web.de>
+---
+ src/tss2-fapi/api/Fapi_Import.c        | 2 ++
+ src/tss2-fapi/fapi_crypto.c            | 4 ++--
+ src/tss2-fapi/ifapi_policy_callbacks.c | 4 +++-
+ 3 files changed, 7 insertions(+), 3 deletions(-)
+
+diff --git a/src/tss2-fapi/api/Fapi_Import.c b/src/tss2-fapi/api/Fapi_Import.c
+index 2aa5ed79..33f5e69a 100644
+--- a/src/tss2-fapi/api/Fapi_Import.c
++++ b/src/tss2-fapi/api/Fapi_Import.c
+@@ -194,6 +194,8 @@ Fapi_Import_Async(
+                                             &extPubKey->public);
+         goto_if_error(r, "Convert PEM public key into TPM public key.", cleanup_error);
+ 
++        extPubKey->public.publicArea.nameAlg = context->profiles.default_profile.nameAlg;
++
+         command->new_object = *object;
+         if (strncmp("/", path, 1) == 0)
+             pos = 1;
+diff --git a/src/tss2-fapi/fapi_crypto.c b/src/tss2-fapi/fapi_crypto.c
+index 43b1bbbb..28385ad3 100644
+--- a/src/tss2-fapi/fapi_crypto.c
++++ b/src/tss2-fapi/fapi_crypto.c
+@@ -122,7 +122,7 @@ static const TPM2B_PUBLIC templateRsaSign = {
+     .size = 0,
+     .publicArea = {
+         .type = TPM2_ALG_RSA,
+-        .nameAlg = TPM2_ALG_SHA1,
++        .nameAlg = TPM2_ALG_SHA256,
+         .objectAttributes = ( TPMA_OBJECT_SIGN_ENCRYPT ),
+         .authPolicy = {
+             .size = 0,
+@@ -153,7 +153,7 @@ static const TPM2B_PUBLIC templateEccSign = {
+     .size = 0,
+     .publicArea = {
+         .type = TPM2_ALG_ECC,
+-        .nameAlg = TPM2_ALG_SHA1,
++        .nameAlg = TPM2_ALG_SHA256,
+         .objectAttributes = ( TPMA_OBJECT_SIGN_ENCRYPT ),
+         .authPolicy = {
+             .size = 0,
+diff --git a/src/tss2-fapi/ifapi_policy_callbacks.c b/src/tss2-fapi/ifapi_policy_callbacks.c
+index 10d591bb..9c52088d 100644
+--- a/src/tss2-fapi/ifapi_policy_callbacks.c
++++ b/src/tss2-fapi/ifapi_policy_callbacks.c
+@@ -1466,8 +1466,10 @@ ifapi_exec_auth_policy(
+ cleanup:
+     SAFE_FREE(names);
+     /* Check whether cleanup was executed. */
+-    if (fapi_ctx->policy.policyutil_stack)
++    if (fapi_ctx->policy.policyutil_stack) {
+         cleanup_policy_list(current_policy->policy_list);
++        current_policy->policy_list = NULL;
++    }
+     return r;
+ }
+ 
+-- 
+2.51.0
+

@@ -1,0 +1,29 @@
+From 379d53c62a7f5e8db828f94b518ff6cbfa2289e6 Mon Sep 17 00:00:00 2001
+From: Juergen Repp <juergen_repp@web.de>
+Date: Wed, 26 Jun 2024 16:47:28 +0200
+Subject: [PATCH 06/22] FAPI: Fix wrong format directive in ifap_set_auth
+
+%u was used for a 16 bit unsigned integer and %lu for sizeof.
+Fixes: #2856
+
+Signed-off-by: Juergen Repp <juergen_repp@web.de>
+---
+ src/tss2-fapi/fapi_util.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/tss2-fapi/fapi_util.c b/src/tss2-fapi/fapi_util.c
+index 740d5e4a..d73e50f1 100644
+--- a/src/tss2-fapi/fapi_util.c
++++ b/src/tss2-fapi/fapi_util.c
+@@ -441,7 +441,7 @@ ifapi_set_auth(
+         if (auth != NULL) {
+             authValue.size = strlen(auth);
+             if (authValue.size > sizeof(TPMU_HA)) {
+-                return_error2(TSS2_FAPI_RC_BAD_VALUE, "Size of auth value %u > %lu",
++                return_error2(TSS2_FAPI_RC_BAD_VALUE, "Size of auth value %"PRIu16" > %zu",
+                               authValue.size, sizeof(TPMU_HA));
+             }
+             memcpy(&authValue.buffer[0], auth, authValue.size);
+-- 
+2.51.0
+

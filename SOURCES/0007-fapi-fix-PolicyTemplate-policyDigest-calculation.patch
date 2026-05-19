@@ -1,0 +1,35 @@
+From fd21afd65ee7007c0eabbbfbed4cde6b6ec64fbc Mon Sep 17 00:00:00 2001
+From: Johannes Holland <johannes.holland@infineon.de>
+Date: Mon, 15 Jul 2024 14:51:11 +0200
+Subject: [PATCH 07/22] fapi: fix PolicyTemplate policyDigest calculation.
+
+We forgot to input the old policyDigest for the hash calculation of the
+new policyDigest.
+
+Bug was not caught due to missing return code assignment in
+policy-execute, see 80ffbf825f127.
+
+Fixes: #2862
+
+Signed-off-by: Johannes Holland <johannes.holland@infineon.de>
+---
+ src/tss2-fapi/ifapi_policy_calculate.c | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/src/tss2-fapi/ifapi_policy_calculate.c b/src/tss2-fapi/ifapi_policy_calculate.c
+index 92fc812c..073ab0eb 100644
+--- a/src/tss2-fapi/ifapi_policy_calculate.c
++++ b/src/tss2-fapi/ifapi_policy_calculate.c
+@@ -1269,6 +1269,9 @@ ifapi_calculate_policy_template(
+     r = ifapi_crypto_hash_start(&cryptoContext, current_hash_alg);
+     return_if_error(r, "crypto hash start");
+ 
++    HASH_UPDATE_BUFFER(cryptoContext,
++                       &current_digest->digests[digest_idx].digest, hash_size,
++                       r, cleanup);
+     HASH_UPDATE(cryptoContext, TPM2_CC, TPM2_CC_PolicyTemplate, r,
+                 cleanup);
+     HASH_UPDATE_BUFFER(cryptoContext, &used_template_hash->buffer[0],
+-- 
+2.51.0
+
